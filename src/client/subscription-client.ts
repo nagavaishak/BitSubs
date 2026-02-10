@@ -2,149 +2,144 @@ import {
   makeContractCall,
   broadcastTransaction,
   AnchorMode,
-  PostConditionMode,
   principalCV,
   uintCV,
+  makeStandardSTXPostCondition,
+  FungibleConditionCode,
   callReadOnlyFunction,
-  cvToJSON
+  cvToJSON,
+  createStacksPrivateKey,
+  getPublicKey,
+  getAddressFromPublicKey,
+  TransactionVersion
 } from '@stacks/transactions';
-import { StacksTestnet, StacksMainnet } from '@stacks/network';
-
-export interface ChannelInfo {
-  active: boolean;
-  remaining: bigint;
-  deposit: bigint;
-  rate: bigint;
-  openedAt: bigint;
-}
+import { StacksTestnet } from '@stacks/network';
 
 export class BitSubsClient {
-  private network: StacksTestnet | StacksMainnet;
+  private network: StacksTestnet;
+  private stacksAddress: string;
 
   constructor(
     private privateKey: string,
     private contractAddress: string,
     private contractName: string,
-    networkType: 'testnet' | 'mainnet' = 'testnet'
+    private serviceAddress: string
   ) {
-    this.network = networkType === 'testnet' ? new StacksTestnet() : new StacksMainnet();
+    this.network = new StacksTestnet();
+    const privateKeyObj = createStacksPrivateKey(privateKey);
+    const publicKey = getPublicKey(privateKeyObj);
+    this.stacksAddress = getAddressFromPublicKey(publicKey.data, TransactionVersion.Testnet);
   }
 
-  async openChannel(
-    serviceAddress: string,
-    depositAmount: bigint,
-    ratePerBlock: bigint
-  ): Promise<string> {
-    console.log('🔓 Opening subscription channel...');
-    console.log(`   Deposit: ${depositAmount} microSTX`);
-    console.log(`   Rate: ${ratePerBlock} microSTX per block`);
+  private async createPaymentProof(resource: string): Promise<string> {
+    // Simple proof: base64(address:resource)
+    // For production, this should be a proper signature
+    const proof = Buffer.from(`${this.stacksAddress}:${resource}`).toString('base64');
+    return proof;
+  }
+
+  async makeRequest(endpoint: string): Promise<any> {
+    let response = await fetch(endpoint);
+
+    // x402 Protocol: Handle 402 Payment Required
+    if (response.status === 402) {
+      const body: any = await response.json();
+      console.log('💰 402 Payment Required - x402 instructions received');
+
+      const hasChannel = await this.checkExistingChannel();
+
+      if (!hasChannel) {
+        console.log('🔓 Opening channel per x402 instructions...');
+        const instructions = body.x402.paymentInstructions.tokens[0];
+        await this.openChannelFromInstructions(instructions.contractCall);
+        console.log('✅ Channel opened');
+        await this.sleep(15000); // Wait for confirmation
+      }
+
+      // x402 Protocol: Retry with payment proof
+      const resourcePath = new URL(endpoint).pathname;
+      const paymentProof = await this.createPaymentProof(resourcePath);
+
+      response = await fetch(endpoint, {
+        headers: {
+          'x-payment-proof': paymentProof,
+          'x-stacks-address': this.stacksAddress
+        }
+      });
+    }
+
+    if (response.status === 200) {
+      return await response.json();
+    } else if (response.status === 402) {
+      throw new Error('Subscription expired');
+    } else {
+      throw new Error(`Request failed: ${response.status}`);
+    }
+  }
+
+  private async openChannelFromInstructions(contractCall: any): Promise<string> {
+    const depositAmount = this.parseArg(contractCall.functionArgs[1]);
 
     const txOptions = {
-      contractAddress: this.contractAddress,
-      contractName: this.contractName,
-      functionName: 'open-channel',
+      contractAddress: contractCall.contractAddress,
+      contractName: contractCall.contractName,
+      functionName: contractCall.functionName,
       functionArgs: [
-        principalCV(serviceAddress),
+        principalCV(this.parseArg(contractCall.functionArgs[0])),
         uintCV(depositAmount),
-        uintCV(ratePerBlock)
+        uintCV(this.parseArg(contractCall.functionArgs[2]))
       ],
       senderKey: this.privateKey,
       network: this.network,
       anchorMode: AnchorMode.Any,
-      postConditionMode: PostConditionMode.Allow
+      postConditions: [
+        makeStandardSTXPostCondition(
+          this.stacksAddress,
+          FungibleConditionCode.Equal,
+          depositAmount
+        )
+      ]
     };
 
     const transaction = await makeContractCall(txOptions);
     const broadcastResponse = await broadcastTransaction(transaction, this.network);
     const txId = typeof broadcastResponse === 'string' ? broadcastResponse : broadcastResponse.txid;
-
-    console.log(`✅ Channel opened. Transaction: ${txId}`);
     return txId;
   }
 
-  async closeChannel(serviceAddress: string): Promise<string> {
-    console.log('🔒 Closing subscription channel...');
-
-    const txOptions = {
-      contractAddress: this.contractAddress,
-      contractName: this.contractName,
-      functionName: 'close-channel',
-      functionArgs: [principalCV(serviceAddress)],
-      senderKey: this.privateKey,
-      network: this.network,
-      anchorMode: AnchorMode.Any,
-      postConditionMode: PostConditionMode.Allow
-    };
-
-    const transaction = await makeContractCall(txOptions);
-    const broadcastResponse = await broadcastTransaction(transaction, this.network);
-    const txId = typeof broadcastResponse === 'string' ? broadcastResponse : broadcastResponse.txid;
-
-    console.log(`✅ Channel closed. Transaction: ${txId}`);
-    return txId;
+  private parseArg(arg: string): any {
+    const [type, value] = arg.split(':');
+    if (type === 'uint') return BigInt(value); // FIXED (Bug #2)
+    if (type === 'principal') return value;
+    return value;
   }
 
-  async forceCloseChannel(
-    subscriberAddress: string,
-    serviceAddress: string
-  ): Promise<string> {
-    console.log('⚠️  Force closing subscription channel...');
-
-    const txOptions = {
-      contractAddress: this.contractAddress,
-      contractName: this.contractName,
-      functionName: 'force-close-channel',
-      functionArgs: [
-        principalCV(subscriberAddress),
-        principalCV(serviceAddress)
-      ],
-      senderKey: this.privateKey,
-      network: this.network,
-      anchorMode: AnchorMode.Any,
-      postConditionMode: PostConditionMode.Allow
-    };
-
-    const transaction = await makeContractCall(txOptions);
-    const broadcastResponse = await broadcastTransaction(transaction, this.network);
-    const txId = typeof broadcastResponse === 'string' ? broadcastResponse : broadcastResponse.txid;
-
-    console.log(`✅ Channel force closed. Transaction: ${txId}`);
-    return txId;
-  }
-
-  async getChannelInfo(
-    subscriberAddress: string,
-    serviceAddress: string
-  ): Promise<ChannelInfo | null> {
+  private async checkExistingChannel(): Promise<boolean> {
     try {
       const result = await callReadOnlyFunction({
         contractAddress: this.contractAddress,
         contractName: this.contractName,
         functionName: 'verify-payment',
         functionArgs: [
-          principalCV(subscriberAddress),
-          principalCV(serviceAddress)
+          principalCV(this.stacksAddress),
+          principalCV(this.serviceAddress) // FIXED (Bug #4)
         ],
         network: this.network,
-        senderAddress: subscriberAddress
+        senderAddress: this.stacksAddress
       });
 
-      const response = cvToJSON(result);
-
-      if (response.value) {
-        return {
-          active: response.value.active?.value || false,
-          remaining: BigInt(response.value.remaining?.value || '0'),
-          deposit: BigInt(response.value.deposit?.value || '0'),
-          rate: BigInt(response.value.rate?.value || '0'),
-          openedAt: BigInt(response.value['opened-at']?.value || '0')
-        };
-      }
-
-      return null;
-    } catch (error) {
-      console.error('Failed to get channel info:', error);
-      return null;
+      const data = cvToJSON(result);
+      return data.value?.active?.value === true;
+    } catch {
+      return false;
     }
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  getAddress(): string {
+    return this.stacksAddress;
   }
 }

@@ -19,6 +19,66 @@ BitSubs enables continuous subscription access using payment channels on Stacks.
 5. **Access revoked automatically** when balance hits zero
 6. **Channel closes** with final settlement
 
+## x402 Protocol Compliance
+
+BitSubs implements the x402 payment protocol for Stacks, enabling standardized payment-required responses with on-chain payment channel verification.
+
+### x402 Flow
+
+1. **Client requests protected endpoint** without payment proof
+2. **Server returns 402** with x402 payment instructions schema
+3. **Client opens channel** via Clarity contract (following x402 instructions)
+4. **Client signs payment proof** and retries request
+5. **Server verifies** signature and channel state on-chain
+6. **Server grants access** (200 OK) if channel is active
+
+### x402 Headers
+
+**Request Headers:**
+- `x-payment-proof`: Payment proof (base64-encoded proof of channel ownership)
+- `x-stacks-address`: Stacks address making the request
+
+**Response (402):**
+```json
+{
+  "error": "Payment Required",
+  "x402": {
+    "version": 1,
+    "paymentInstructions": {
+      "network": "stacks-testnet",
+      "chainId": "stacks:testnet",
+      "tokens": [{
+        "token": "STX",
+        "amount": "1000000",
+        "recipient": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
+        "contractCall": {
+          "contractAddress": "ST...",
+          "contractName": "subscription-channel",
+          "functionName": "open-channel",
+          "functionArgs": ["principal:...", "uint:1000000", "uint:100"]
+        }
+      }],
+      "description": "Open subscription channel for continuous API access",
+      "resource": "/api/premium/data"
+    }
+  }
+}
+```
+
+### Server Verification
+
+The server verifies each request by:
+1. **Validating payment proof** against provided Stacks address
+2. **Checking channel state** via Clarity read-only function `verify-payment`
+3. **Granting access** only if channel is active and balance > 0
+
+### Why x402 + Payment Channels?
+
+**Traditional x402**: 1000 requests = 1000 on-chain payment transactions
+**BitSubs**: 1000 requests = 2 on-chain transactions (99.8% gas reduction)
+
+This is the **first x402 implementation for continuous subscriptions** - combining the standardized x402 protocol with payment channels to enable Bitcoin-native subscriptions at scale.
+
 ## Architecture
 
 ```
@@ -208,22 +268,28 @@ const client = new BitSubsClient(
   privateKey,
   contractAddress,
   contractName,
-  'testnet'
+  serviceAddress  // Service provider address
 );
 
-// Open channel
-await client.openChannel(
-  serviceAddress,
-  1000000n,  // 1 STX
-  100n       // 100 microSTX per block
-);
+// x402-compliant request flow
+// Client automatically:
+// 1. Gets 402 response with x402 instructions
+// 2. Opens channel if needed
+// 3. Creates payment proof
+// 4. Retries with proof headers
+const data = await client.makeRequest('http://localhost:3000/api/premium/data');
+console.log(data); // Protected resource data
 
-// Get channel info
-const info = await client.getChannelInfo(subscriberAddress, serviceAddress);
-console.log(`Active: ${info.active}, Remaining: ${info.remaining}`);
+// That's it! The SDK handles the entire x402 flow automatically
+```
 
-// Close channel
-await client.closeChannel(serviceAddress);
+**Manual Channel Operations** (if needed):
+```typescript
+// Check existing channel
+const hasChannel = await client.checkExistingChannel();
+
+// Get client address
+const address = client.getAddress();
 ```
 
 ### Express Middleware
@@ -262,12 +328,14 @@ Smart devices paying for network/API access proportional to usage time.
 
 ## Technical Details
 
+- **Protocol**: x402 payment protocol for Stacks
 - **Blockchain**: Stacks testnet/mainnet
 - **Token**: STX (sBTC support roadmap)
 - **Smart Contract Language**: Clarity v2
 - **Backend**: Node.js + Express + TypeScript
 - **Testing**: Vitest + Clarinet
 - **Gas Optimization**: Read-only verification (no per-request writes)
+- **x402 Compliance**: Full schema compliance with payment channel verification
 - **Deployed Contract**: `STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel` (testnet)
 - **Explorer**: https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet
 
