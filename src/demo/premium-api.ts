@@ -4,10 +4,10 @@ import { x402SubscriptionMiddleware } from '../middleware/x402-subscription';
 const app = express();
 app.use(express.json());
 
-// Configuration (replace with your deployed contract)
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM';
+// Configuration (Deployed to Testnet)
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C';
 const CONTRACT_NAME = 'subscription-channel';
-const SERVICE_ADDRESS = process.env.SERVICE_ADDRESS || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM';
+const SERVICE_ADDRESS = process.env.SERVICE_ADDRESS || 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C';
 
 // Apply middleware to premium endpoints
 app.use('/api/premium/*', x402SubscriptionMiddleware({

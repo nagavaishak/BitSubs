@@ -1,11 +1,23 @@
 import { BitSubsClient } from '../client/subscription-client';
 import fetch from 'node-fetch';
+const bip39 = require('bip39');
+const BIP32Factory = require('bip32').default || require('bip32');
+const ecc = require('tiny-secp256k1');
 
-// Configuration - Replace with your actual values
-const PRIVATE_KEY = process.env.PRIVATE_KEY || 'your-testnet-private-key-here';
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM';
+// Derive private key from mnemonic
+function derivePrivateKey(mnemonic: string): string {
+  const seed = bip39.mnemonicToSeedSync(mnemonic);
+  const bip32 = BIP32Factory(ecc);
+  const root = bip32.fromSeed(seed);
+  const child = root.derivePath("m/44'/5757'/0'/0/0");
+  return Buffer.from(child.privateKey).toString('hex');
+}
+
+// Configuration - Deployed to Testnet
+const MNEMONIC = process.env.MNEMONIC || "slam cube nerve logic between gas surge worth panic delay fetch tattoo lamp pioneer useless scrub potato camp soap retire defense remove edit damp";
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C';
 const CONTRACT_NAME = 'subscription-channel';
-const SERVICE_ADDRESS = process.env.SERVICE_ADDRESS || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM';
+const SERVICE_ADDRESS = process.env.SERVICE_ADDRESS || 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C';
 const API_ENDPOINT = process.env.API_ENDPOINT || 'http://localhost:3000';
 
 async function sleep(ms: number) {
@@ -17,8 +29,11 @@ async function runDemo() {
   console.log('BitSubs: Bitcoin Subscriptions via x402 - Terminal Demo');
   console.log('='.repeat(70));
 
+  // Derive private key from mnemonic
+  const privateKey = derivePrivateKey(MNEMONIC);
+
   const client = new BitSubsClient(
-    PRIVATE_KEY,
+    privateKey,
     CONTRACT_ADDRESS,
     CONTRACT_NAME,
     'testnet'
@@ -45,8 +60,14 @@ async function runDemo() {
     console.log('\n📍 STEP 2: Verifying channel status');
     console.log('-'.repeat(70));
 
+    // Get the subscriber address from the private key
+    const { getAddressFromPrivateKey } = require('@stacks/transactions');
+    const { StacksTestnet } = require('@stacks/network');
+    const network = new StacksTestnet();
+    const subscriberAddress = getAddressFromPrivateKey(privateKey, network.version);
+
     const channelInfo = await client.getChannelInfo(
-      PRIVATE_KEY, // In real impl, derive address from key
+      subscriberAddress,
       SERVICE_ADDRESS
     );
 
@@ -60,7 +81,7 @@ async function runDemo() {
     // Step 3: Make requests to premium API
     console.log('\n📍 STEP 3: Making requests to premium API');
     console.log('-'.repeat(70));
-    console.log(`   Subscriber ID: ${PRIVATE_KEY.slice(0, 10)}...`);
+    console.log(`   Subscriber Address: ${subscriberAddress}`);
     console.log(`   Target: ${API_ENDPOINT}/api/premium/*`);
 
     let successCount = 0;
@@ -76,7 +97,7 @@ async function runDemo() {
 
         const response = await fetch(`${API_ENDPOINT}${endpoint}`, {
           headers: {
-            'x-subscriber-id': PRIVATE_KEY
+            'x-subscriber-id': subscriberAddress
           }
         });
 
