@@ -1,5 +1,3 @@
-import { motion } from 'framer-motion'
-
 interface Props {
   stats: {
     totalRequests: number
@@ -18,33 +16,13 @@ export default function StatsCards({ stats }: Props) {
   ]
 
   return (
-    <div className="grid-4">
-      {cards.map((card, index) => (
-        <motion.div
-          key={card.label}
-          className="stacks-card"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-          style={{ textAlign: 'center' }}
-        >
-          <div style={{
-            fontSize: '2.5rem',
-            fontWeight: 700,
-            color: 'var(--stacks-orange)',
-            marginBottom: '0.5rem'
-          }}>
-            {card.value}
-          </div>
-          <div style={{
-            fontSize: '0.875rem',
-            color: 'var(--stacks-text-secondary)',
-            fontWeight: 500
-          }}>
-            {card.label}
-          </div>
-        </motion.div>
+    <>
+      {cards.map((card) => (
+        <div key={card.label} className="stat-card">
+          <div className="stat-value">{card.value}</div>
+          <div className="stat-label">{card.label}</div>
+        </div>
       ))}
-    </div>
+    </>
   )
 }
