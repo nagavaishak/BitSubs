@@ -268,6 +268,8 @@ Smart devices paying for network/API access proportional to usage time.
 - **Backend**: Node.js + Express + TypeScript
 - **Testing**: Vitest + Clarinet
 - **Gas Optimization**: Read-only verification (no per-request writes)
+- **Deployed Contract**: `STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel` (testnet)
+- **Explorer**: https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet
 
 ## Testing
 

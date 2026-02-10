@@ -1,0 +1,9 @@
+{
+  "network": "testnet",
+  "contractAddress": "STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C",
+  "contractName": "subscription-channel",
+  "fullyQualifiedContractId": "STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel",
+  "txId": "6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743",
+  "timestamp": "2026-02-10T00:20:56.718Z",
+  "explorerUrl": "https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet"
+}
