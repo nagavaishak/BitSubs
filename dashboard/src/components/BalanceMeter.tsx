@@ -10,97 +10,58 @@ export default function BalanceMeter({ balance, totalDeposit }: Props) {
 
   return (
     <motion.div
-      className="glass-card"
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      className="stacks-card"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.1 }}
     >
-      <h3 style={{
-        fontFamily: 'Orbitron, sans-serif',
-        fontSize: '1.2rem',
-        marginBottom: '2rem',
-        color: '#00F0FF',
-        textTransform: 'uppercase',
-        letterSpacing: '2px'
-      }}>
-        Balance Meter
+      <h3 className="section-title" style={{ marginBottom: '2rem' }}>
+        Channel Balance
       </h3>
 
-      <div style={{ padding: '2rem 0', textAlign: 'center' }}>
+      <div style={{ padding: '1rem 0' }}>
+        {/* Progress bar */}
         <div style={{
-          position: 'relative',
-          width: '200px',
-          height: '200px',
-          margin: '0 auto 2rem'
+          width: '100%',
+          height: '8px',
+          background: 'var(--stacks-border)',
+          borderRadius: '4px',
+          overflow: 'hidden',
+          marginBottom: '2rem'
         }}>
-          <svg width="200" height="200" style={{ transform: 'rotate(-90deg)' }}>
-            <circle
-              cx="100"
-              cy="100"
-              r="90"
-              fill="none"
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth="20"
-            />
-            <motion.circle
-              cx="100"
-              cy="100"
-              r="90"
-              fill="none"
-              stroke="url(#gradient)"
-              strokeWidth="20"
-              strokeLinecap="round"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: percentage / 100 }}
-              transition={{ duration: 0.5 }}
-              style={{
-                strokeDasharray: 565,
-                strokeDashoffset: 565 * (1 - percentage / 100)
-              }}
-            />
-            <defs>
-              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" style={{ stopColor: '#5546FF' }} />
-                <stop offset="100%" style={{ stopColor: '#F7931A' }} />
-              </linearGradient>
-            </defs>
-          </svg>
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              fontFamily: 'Orbitron, sans-serif',
-              fontSize: '2rem',
-              fontWeight: 'bold',
-              color: percentage > 50 ? '#39FF14' : percentage > 20 ? '#F7931A' : '#ff4444',
-              textShadow: `0 0 20px ${percentage > 50 ? '#39FF14' : percentage > 20 ? '#F7931A' : '#ff4444'}`
-            }}>
-              {percentage.toFixed(0)}%
-            </div>
-          </div>
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${percentage}%` }}
+            transition={{ duration: 0.5 }}
+            style={{
+              height: '100%',
+              background: 'var(--stacks-orange)',
+              borderRadius: '4px'
+            }}
+          />
         </div>
 
+        {/* Balance stats */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gap: '1rem',
-          fontSize: '0.9rem',
-          fontFamily: 'JetBrains Mono, monospace'
+          gap: '2rem',
+          marginTop: '2rem'
         }}>
           <div>
-            <div style={{ color: '#888', marginBottom: '0.5rem' }}>Balance</div>
-            <div style={{ color: '#F7931A', fontWeight: 'bold' }}>
-              {(balance / 1000000).toFixed(6)} STX
+            <div style={{ fontSize: '0.875rem', color: 'var(--stacks-text-secondary)', marginBottom: '0.5rem' }}>
+              Current Balance
+            </div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--stacks-white)' }}>
+              {(balance / 1000000).toFixed(3)} STX
             </div>
           </div>
           <div>
-            <div style={{ color: '#888', marginBottom: '0.5rem' }}>Deposit</div>
-            <div style={{ color: '#5546FF', fontWeight: 'bold' }}>
-              {(totalDeposit / 1000000).toFixed(6)} STX
+            <div style={{ fontSize: '0.875rem', color: 'var(--stacks-text-secondary)', marginBottom: '0.5rem' }}>
+              Remaining
+            </div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--stacks-orange)' }}>
+              {percentage.toFixed(1)}%
             </div>
           </div>
         </div>

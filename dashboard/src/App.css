@@ -1,12 +1,12 @@
+/* Stacks-inspired Design System */
 :root {
-  --bitcoin-orange: #F7931A;
-  --stacks-purple: #5546FF;
-  --cyber-blue: #00F0FF;
-  --neon-green: #39FF14;
-  --dark-bg: #0a0a0f;
-  --card-bg: rgba(15, 15, 25, 0.8);
-  --glass-bg: rgba(255, 255, 255, 0.03);
-  --border-glow: rgba(85, 70, 255, 0.3);
+  --stacks-orange: #FF8A00;
+  --stacks-dark: #0F0F0F;
+  --stacks-gray: #2A2A2A;
+  --stacks-light-gray: #5A5A5A;
+  --stacks-border: #3A3A3A;
+  --stacks-white: #FFFFFF;
+  --stacks-text-secondary: #999999;
 }
 
 * {
@@ -17,169 +17,171 @@
 
 body {
   margin: 0;
-  font-family: 'JetBrains Mono', monospace;
-  background: var(--dark-bg);
-  color: #fff;
-  overflow-x: hidden;
+  font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--stacks-dark);
+  color: var(--stacks-white);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
   min-height: 100vh;
-  position: relative;
 }
 
-/* Animated grid background */
-.grid-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image:
-    linear-gradient(rgba(85, 70, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(85, 70, 255, 0.03) 1px, transparent 1px);
-  background-size: 50px 50px;
-  animation: gridMove 20s linear infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-
-@keyframes gridMove {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(50px, 50px); }
-}
-
-/* Scan line effect */
-.scanline {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg,
-    transparent,
-    var(--cyber-blue),
-    transparent
-  );
-  animation: scan 3s linear infinite;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.3;
-}
-
-@keyframes scan {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(100vh); }
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .app-container {
-  position: relative;
-  z-index: 1;
-  padding: 2rem;
-  max-width: 1800px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 3rem 2rem;
 }
 
-/* Glassmorphism card */
-.glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--border-glow);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-}
-
-.glass-card:hover {
-  border-color: var(--stacks-purple);
-  box-shadow:
-    0 8px 32px rgba(85, 70, 255, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-}
-
-/* Neon glow button */
-.neon-button {
-  position: relative;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-  font-weight: 600;
-  font-family: 'Orbitron', sans-serif;
-  color: #fff;
-  background: linear-gradient(135deg, var(--bitcoin-orange), var(--stacks-purple));
-  border: none;
+/* Stacks-style Card */
+.stacks-card {
+  background: var(--stacks-gray);
+  border: 1px solid var(--stacks-border);
   border-radius: 12px;
-  cursor: pointer;
-  overflow: hidden;
+  padding: 2rem;
   transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 2px;
 }
 
-.neon-button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
+.stacks-card:hover {
+  border-color: var(--stacks-light-gray);
 }
 
-.neon-button:hover::before {
-  width: 300px;
-  height: 300px;
+/* Stacks-style Button */
+.stacks-button {
+  display: inline-block;
+  padding: 1rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Open Sans', sans-serif;
+  color: var(--stacks-white);
+  background: var(--stacks-orange);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
-.neon-button:hover {
-  transform: scale(1.05);
-  box-shadow:
-    0 0 20px var(--bitcoin-orange),
-    0 0 40px var(--stacks-purple);
+.stacks-button:hover {
+  background: #FF9A1A;
+  transform: translateY(-2px);
 }
 
-.neon-button:active {
-  transform: scale(0.98);
+.stacks-button:active {
+  transform: translateY(0);
 }
 
-/* Text glow effects */
-.text-glow {
-  text-shadow:
-    0 0 10px var(--cyber-blue),
-    0 0 20px var(--cyber-blue),
-    0 0 30px var(--cyber-blue);
+.stacks-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.text-bitcoin {
-  color: var(--bitcoin-orange);
-  text-shadow: 0 0 10px var(--bitcoin-orange);
+/* Typography */
+.text-primary {
+  color: var(--stacks-white);
 }
 
-.text-stacks {
-  color: var(--stacks-purple);
-  text-shadow: 0 0 10px var(--stacks-purple);
+.text-secondary {
+  color: var(--stacks-text-secondary);
 }
 
-/* Pulse animation */
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(1.05); }
+.text-orange {
+  color: var(--stacks-orange);
 }
 
-.pulse {
-  animation: pulse 2s ease-in-out infinite;
+/* Status Indicators */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
-/* Fade in animation */
+.status-badge.active {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22C55E;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge.inactive {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6B7280;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.status-badge.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.warning {
+  background: rgba(255, 138, 0, 0.1);
+  color: var(--stacks-orange);
+  border: 1px solid rgba(255, 138, 0, 0.3);
+}
+
+/* Grid Layouts */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Section Spacing */
+.section {
+  margin-bottom: 3rem;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--stacks-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--stacks-light-gray);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--stacks-orange);
+}
+
+/* Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -187,80 +189,17 @@ body {
   }
 }
 
-.fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
+.fade-in {
+  animation: fadeInUp 0.6s ease-out;
 }
 
-/* Status indicators */
-.status-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: 8px;
-  position: relative;
-}
-
-.status-dot::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-}
-
-@keyframes ping {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
+/* Responsive */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 2rem 1rem;
   }
-  75%, 100% {
-    transform: translate(-50%, -50%) scale(2);
-    opacity: 0;
+
+  .grid-2, .grid-4 {
+    grid-template-columns: 1fr;
   }
-}
-
-.status-active {
-  background: var(--neon-green);
-  box-shadow: 0 0 10px var(--neon-green);
-}
-
-.status-active::after {
-  background: var(--neon-green);
-}
-
-.status-inactive {
-  background: #666;
-}
-
-.status-error {
-  background: #ff4444;
-  box-shadow: 0 0 10px #ff4444;
-}
-
-.status-error::after {
-  background: #ff4444;
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--stacks-purple);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--bitcoin-orange);
 }

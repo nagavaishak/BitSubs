@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import './App.css'
 import Header from './components/Header'
@@ -56,7 +56,6 @@ function App() {
   const startDemo = async () => {
     setDemoState(prev => ({ ...prev, isRunning: true, channelStatus: 'opening' }))
 
-    // Simulate opening channel
     setTimeout(() => {
       setDemoState(prev => ({
         ...prev,
@@ -69,7 +68,7 @@ function App() {
         }
       }))
       startRequestSimulation()
-    }, 3000)
+    }, 2000)
   }
 
   const startRequestSimulation = () => {
@@ -85,7 +84,7 @@ function App() {
       const endpoint = endpoints[requestCount % 3]
 
       setDemoState(prev => {
-        const newBalance = prev.balance - 100 // 100 microSTX per block
+        const newBalance = prev.balance - 100
         const status = newBalance > 0 ? 200 : 402
 
         const newRequest = {
@@ -106,7 +105,7 @@ function App() {
 
         if (newBalance <= 0) {
           clearInterval(interval)
-          setTimeout(() => closeChannel(), 2000)
+          setTimeout(() => closeChannel(), 1000)
           return {
             ...prev,
             balance: 0,
@@ -125,7 +124,7 @@ function App() {
       })
 
       requestCount++
-    }, 50) // Fast simulation: 50ms per request
+    }, 30)
   }
 
   const closeChannel = () => {
@@ -141,61 +140,46 @@ function App() {
   }
 
   return (
-    <>
-      <div className="grid-background" />
-      <div className="scanline" />
+    <div className="app-container">
+      <Header />
 
-      <div className="app-container">
-        <Header />
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          style={{ marginBottom: '3rem', textAlign: 'center' }}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="section"
+        style={{ textAlign: 'center' }}
+      >
+        <button
+          className="stacks-button"
+          onClick={startDemo}
+          disabled={demoState.isRunning}
         >
-          <button
-            className="neon-button"
-            onClick={startDemo}
-            disabled={demoState.isRunning}
-            style={{
-              opacity: demoState.isRunning ? 0.5 : 1,
-              cursor: demoState.isRunning ? 'not-allowed' : 'pointer'
-            }}
-          >
-            {demoState.isRunning ? 'Demo Running...' : 'Start Demo'}
-          </button>
-        </motion.div>
+          {demoState.isRunning ? 'Demo Running...' : 'Start Live Demo'}
+        </button>
+      </motion.div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-          gap: '2rem',
-          marginBottom: '2rem'
-        }}>
-          <ChannelStatus status={demoState.channelStatus} />
-          <BalanceMeter
-            balance={demoState.balance}
-            totalDeposit={demoState.totalDeposit}
-          />
-        </div>
-
-        <PaymentFlow status={demoState.channelStatus} />
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '2rem',
-          marginTop: '2rem'
-        }}>
-          <RequestFeed requests={demoState.requests} />
-          <div>
-            <StatsCards stats={demoState.stats} />
-            <BlockchainInfo blockchain={demoState.blockchain} />
-          </div>
-        </div>
+      <div className="section grid-2">
+        <ChannelStatus status={demoState.channelStatus} />
+        <BalanceMeter
+          balance={demoState.balance}
+          totalDeposit={demoState.totalDeposit}
+        />
       </div>
-    </>
+
+      <div className="section">
+        <PaymentFlow status={demoState.channelStatus} />
+      </div>
+
+      <div className="section">
+        <StatsCards stats={demoState.stats} />
+      </div>
+
+      <div className="section grid-2">
+        <RequestFeed requests={demoState.requests} />
+        <BlockchainInfo blockchain={demoState.blockchain} />
+      </div>
+    </div>
   )
 }
 

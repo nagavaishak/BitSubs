@@ -3,45 +3,39 @@ import { motion } from 'framer-motion'
 export default function Header() {
   return (
     <motion.header
-      initial={{ opacity: 0, y: -50 }}
+      initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
+      transition={{ duration: 0.6 }}
       style={{
         textAlign: 'center',
-        marginBottom: '3rem',
-        padding: '2rem 0'
+        marginBottom: '4rem',
+        paddingBottom: '2rem',
+        borderBottom: '1px solid var(--stacks-border)'
       }}
     >
       <h1 style={{
-        fontFamily: 'Orbitron, sans-serif',
-        fontSize: '4rem',
-        fontWeight: 900,
-        background: 'linear-gradient(135deg, #F7931A, #5546FF)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        marginBottom: '0.5rem',
-        textTransform: 'uppercase',
-        letterSpacing: '4px'
+        fontSize: '3.5rem',
+        fontWeight: 800,
+        marginBottom: '1rem',
+        color: 'var(--stacks-white)'
       }}>
         BitSubs
       </h1>
       <p style={{
-        fontFamily: 'JetBrains Mono, monospace',
-        fontSize: '1.2rem',
-        color: '#00F0FF',
-        textShadow: '0 0 10px #00F0FF',
-        letterSpacing: '2px'
+        fontSize: '1.25rem',
+        color: 'var(--stacks-text-secondary)',
+        fontWeight: 400,
+        marginBottom: '0.5rem'
       }}>
-        BITCOIN SUBSCRIPTIONS VIA X402 ON STACKS
+        Bitcoin Subscriptions on Stacks
       </p>
-      <div style={{
-        marginTop: '1rem',
-        fontSize: '0.9rem',
-        color: '#888',
-        fontFamily: 'JetBrains Mono, monospace'
+      <p style={{
+        fontSize: '0.95rem',
+        color: 'var(--stacks-orange)',
+        fontWeight: 600
       }}>
-        <code>1000 PAYMENTS = 2 ON-CHAIN TRANSACTIONS</code>
-      </div>
+        1000 payments = 2 on-chain transactions • 99.8% gas savings
+      </p>
     </motion.header>
   )
 }

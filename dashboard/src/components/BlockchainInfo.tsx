@@ -9,104 +9,90 @@ interface Props {
 }
 
 export default function BlockchainInfo({ blockchain }: Props) {
-  const truncate = (str: string, len: number = 20) => {
+  const truncate = (str: string, len: number = 16) => {
     if (str.length <= len) return str
     return `${str.slice(0, len / 2)}...${str.slice(-len / 2)}`
   }
 
   return (
     <motion.div
-      className="glass-card"
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
+      className="stacks-card"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.5 }}
     >
-      <h3 style={{
-        fontFamily: 'Orbitron, sans-serif',
-        fontSize: '1.2rem',
-        marginBottom: '1.5rem',
-        color: '#00F0FF',
-        textTransform: 'uppercase',
-        letterSpacing: '2px'
-      }}>
-        Blockchain Info
+      <h3 className="section-title" style={{ marginBottom: '1.5rem' }}>
+        Blockchain Information
       </h3>
 
-      <div style={{
-        fontFamily: 'JetBrains Mono, monospace',
-        fontSize: '0.85rem'
-      }}>
+      <div style={{ fontSize: '0.875rem' }}>
         <div style={{ marginBottom: '1.5rem' }}>
-          <div style={{ color: '#888', marginBottom: '0.5rem' }}>CONTRACT ADDRESS</div>
+          <div style={{ color: 'var(--stacks-text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>
+            Contract Address
+          </div>
           <div style={{
-            color: '#5546FF',
-            background: 'rgba(85, 70, 255, 0.1)',
+            color: 'var(--stacks-white)',
+            background: 'var(--stacks-dark)',
             padding: '0.75rem',
-            borderRadius: '8px',
-            border: '1px solid rgba(85, 70, 255, 0.3)',
-            wordBreak: 'break-all'
+            borderRadius: '6px',
+            border: '1px solid var(--stacks-border)',
+            wordBreak: 'break-all',
+            fontFamily: 'monospace',
+            fontSize: '0.8rem'
           }}>
-            {truncate(blockchain.contractAddress, 30)}
+            {truncate(blockchain.contractAddress, 24)}
           </div>
         </div>
 
         {blockchain.txId && (
           <div style={{ marginBottom: '1.5rem' }}>
-            <div style={{ color: '#888', marginBottom: '0.5rem' }}>TRANSACTION ID</div>
+            <div style={{ color: 'var(--stacks-text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>
+              Transaction ID
+            </div>
             <div style={{
-              color: '#F7931A',
-              background: 'rgba(247, 147, 26, 0.1)',
+              color: 'var(--stacks-white)',
+              background: 'var(--stacks-dark)',
               padding: '0.75rem',
-              borderRadius: '8px',
-              border: '1px solid rgba(247, 147, 26, 0.3)',
-              wordBreak: 'break-all'
+              borderRadius: '6px',
+              border: '1px solid var(--stacks-border)',
+              wordBreak: 'break-all',
+              fontFamily: 'monospace',
+              fontSize: '0.8rem'
             }}>
-              {truncate(blockchain.txId, 30)}
+              {truncate(blockchain.txId, 24)}
             </div>
           </div>
         )}
 
         <div style={{ marginBottom: '1.5rem' }}>
-          <div style={{ color: '#888', marginBottom: '0.5rem' }}>NETWORK</div>
+          <div style={{ color: 'var(--stacks-text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>
+            Network
+          </div>
           <div style={{
-            color: '#39FF14',
-            background: 'rgba(57, 255, 20, 0.1)',
-            padding: '0.75rem',
-            borderRadius: '8px',
-            border: '1px solid rgba(57, 255, 20, 0.3)'
+            color: '#22C55E',
+            fontWeight: 600
           }}>
             Stacks Testnet
           </div>
         </div>
 
-        <a
-          href={`https://explorer.hiro.so/txid/${blockchain.txId}?chain=testnet`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'block',
-            textAlign: 'center',
-            padding: '0.75rem',
-            background: 'linear-gradient(135deg, #F7931A, #5546FF)',
-            color: '#fff',
-            textDecoration: 'none',
-            borderRadius: '8px',
-            fontWeight: 'bold',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)'
-            e.currentTarget.style.boxShadow = '0 0 20px rgba(247, 147, 26, 0.6)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)'
-            e.currentTarget.style.boxShadow = 'none'
-          }}
-        >
-          View on Explorer →
-        </a>
+        {blockchain.txId && (
+          <a
+            href={`https://explorer.hiro.so/txid/${blockchain.txId}?chain=testnet`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="stacks-button"
+            style={{
+              display: 'block',
+              textAlign: 'center',
+              textDecoration: 'none',
+              fontSize: '0.9rem',
+              padding: '0.75rem 1.5rem'
+            }}
+          >
+            View on Explorer →
+          </a>
+        )}
       </div>
     </motion.div>
   )

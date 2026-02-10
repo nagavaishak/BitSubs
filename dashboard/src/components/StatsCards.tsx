@@ -11,78 +11,40 @@ interface Props {
 
 export default function StatsCards({ stats }: Props) {
   const cards = [
-    {
-      label: 'Total Requests',
-      value: stats.totalRequests.toLocaleString(),
-      color: '#00F0FF',
-      icon: '📊'
-    },
-    {
-      label: 'Successful',
-      value: stats.successfulRequests.toLocaleString(),
-      color: '#39FF14',
-      icon: '✓'
-    },
-    {
-      label: 'On-Chain Txs',
-      value: stats.onChainTxs,
-      color: '#F7931A',
-      icon: '⛓️'
-    },
-    {
-      label: 'Gas Savings',
-      value: `${stats.gasSavings.toFixed(2)}%`,
-      color: '#5546FF',
-      icon: '⚡'
-    }
+    { label: 'Total Requests', value: stats.totalRequests.toLocaleString() },
+    { label: 'Successful', value: stats.successfulRequests.toLocaleString() },
+    { label: 'On-Chain Transactions', value: stats.onChainTxs },
+    { label: 'Gas Savings', value: `${stats.gasSavings.toFixed(2)}%` }
   ]
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, delay: 0.4 }}
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '1rem',
-        marginBottom: '2rem'
-      }}
-    >
+    <div className="grid-4">
       {cards.map((card, index) => (
         <motion.div
           key={card.label}
-          className="glass-card"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3, delay: 0.4 + index * 0.1 }}
-          style={{
-            padding: '1.5rem',
-            textAlign: 'center'
-          }}
+          className="stacks-card"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+          style={{ textAlign: 'center' }}
         >
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{card.icon}</div>
           <div style={{
-            fontFamily: 'Orbitron, sans-serif',
-            fontSize: '1.8rem',
-            fontWeight: 'bold',
-            color: card.color,
-            textShadow: `0 0 10px ${card.color}`,
+            fontSize: '2.5rem',
+            fontWeight: 700,
+            color: 'var(--stacks-orange)',
             marginBottom: '0.5rem'
           }}>
             {card.value}
           </div>
           <div style={{
-            fontFamily: 'JetBrains Mono, monospace',
-            fontSize: '0.8rem',
-            color: '#888',
-            textTransform: 'uppercase',
-            letterSpacing: '1px'
+            fontSize: '0.875rem',
+            color: 'var(--stacks-text-secondary)',
+            fontWeight: 500
           }}>
             {card.label}
           </div>
         </motion.div>
       ))}
-    </motion.div>
+    </div>
   )
 }
