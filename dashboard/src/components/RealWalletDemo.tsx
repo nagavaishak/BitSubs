@@ -49,19 +49,30 @@ export default function RealWalletDemo() {
   }
 
   const connectWallet = () => {
-    showConnect({
-      appDetails: {
-        name: 'BitSubs',
-        icon: window.location.origin + '/vite.svg'
-      },
-      onFinish: () => {
-        const data = userSession.loadUserData()
-        setUserData(data)
-        addLog('✅ Wallet connected')
-        checkChannelState()
-      },
-      userSession
-    })
+    console.log('Connect wallet button clicked!')
+    try {
+      showConnect({
+        appDetails: {
+          name: 'BitSubs',
+          icon: window.location.origin + '/vite.svg'
+        },
+        onFinish: () => {
+          console.log('Wallet connection finished')
+          const data = userSession.loadUserData()
+          setUserData(data)
+          addLog('✅ Wallet connected')
+          checkChannelState()
+        },
+        onCancel: () => {
+          console.log('Wallet connection cancelled')
+          addLog('❌ Wallet connection cancelled')
+        },
+        userSession
+      })
+    } catch (error: any) {
+      console.error('Error connecting wallet:', error)
+      addLog(`❌ Error: ${error.message}`)
+    }
   }
 
   const checkChannelState = async () => {
@@ -224,17 +235,27 @@ export default function RealWalletDemo() {
           <button
             onClick={connectWallet}
             style={{
-              background: 'var(--stacks-orange)',
-              color: '#000',
-              padding: '1rem 2rem',
-              border: 'none',
-              borderRadius: '4px',
-              fontSize: '1rem',
+              background: '#FF7200',
+              color: '#FFFFFF',
+              padding: '1.25rem 2.5rem',
+              border: '2px solid #FF7200',
+              borderRadius: '8px',
+              fontSize: '1.1rem',
               fontWeight: 'bold',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(255, 114, 0, 0.3)',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = '#FF8533'
+              e.currentTarget.style.transform = 'translateY(-2px)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = '#FF7200'
+              e.currentTarget.style.transform = 'translateY(0)'
             }}
           >
-            Connect Stacks Wallet
+            🔗 Connect Stacks Wallet
           </button>
           <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--stacks-text-secondary)' }}>
             Need testnet STX?{' '}
