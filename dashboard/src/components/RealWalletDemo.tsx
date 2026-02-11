@@ -264,6 +264,24 @@ export default function RealWalletDemo() {
     }
   }
 
+  const show402Response = async () => {
+    try {
+      addLog('Requesting without payment (will get 402)...')
+
+      const response = await fetch(API_URL + '/api/premium/weather')
+      const data = await response.json()
+
+      if (response.status === 402) {
+        addLog('✓ Got HTTP 402 Payment Required')
+        addLog('x402 version: ' + data.x402?.version)
+        addLog('Payment instructions included: ' + (data.x402?.paymentInstructions ? 'YES' : 'NO'))
+        console.log('Full 402 response:', data)
+      }
+    } catch (error: any) {
+      addLog('Error: ' + error.message)
+    }
+  }
+
   const makeRequest = async () => {
     if (!stxAddress || !channelState?.active?.value) {
       addLog('Need active channel first')
@@ -454,6 +472,35 @@ export default function RealWalletDemo() {
                 Successful x402 requests
               </p>
             </div>
+          </div>
+
+          {/* x402 Protocol Demo */}
+          <div style={{
+            background: 'rgba(66, 135, 245, 0.1)',
+            padding: '1.5rem',
+            borderRadius: '8px',
+            border: '2px solid #4287f5',
+            marginBottom: '2rem'
+          }}>
+            <h4 style={{ color: '#4287f5', marginBottom: '1rem', fontSize: '1.2rem' }}>🔬 x402 Protocol Test</h4>
+            <button
+              onClick={show402Response}
+              style={{
+                background: 'transparent',
+                color: '#4287f5',
+                padding: '0.75rem 1.5rem',
+                border: '2px solid #4287f5',
+                borderRadius: '4px',
+                fontSize: '0.9rem',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              Show HTTP 402 Response
+            </button>
+            <p style={{ marginTop: '0.75rem', fontSize: '0.85rem', color: 'var(--stacks-text-secondary)' }}>
+              Makes request without payment to see x402 protocol compliance
+            </p>
           </div>
 
           <div style={{
