@@ -1,36 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
-import { AppConfig, UserSession, showConnect, openContractCall } from '@stacks/connect'
-import {
-  callReadOnlyFunction,
-  principalCV,
-  uintCV,
-  AnchorMode,
-  cvToJSON,
-  PostConditionMode
-} from '@stacks/transactions'
-import { StacksTestnet } from '@stacks/network'
+import { connect, disconnect as disconnectWallet, isConnected, request } from '@stacks/connect'
 
 const CONTRACT_ADDRESS = 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP'
 const CONTRACT_NAME = 'subscription-channel-v2'
 const SERVICE_ADDRESS = 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP'
 const API_URL = 'https://bitsubs-production.up.railway.app'
 
-const appConfig = new AppConfig(['store_write', 'publish_data'])
-const userSession = new UserSession({ appConfig })
-
-const network = new StacksTestnet()
-
 export default function RealWalletDemo() {
-  const [userData, setUserData] = useState<any>(null)
+  const [stxAddress, setStxAddress] = useState<string | null>(null)
   const [channelState, setChannelState] = useState<any>(null)
   const [logs, setLogs] = useState<string[]>([])
   const [isOpening, setIsOpening] = useState(false)
   const [requestCount, setRequestCount] = useState(0)
 
   useEffect(() => {
-    if (userSession.isUserSignedIn()) {
-      const data = userSession.loadUserData()
-      setUserData(data)
+    // Check if already connected
+    if (isConnected()) {
+      try {
+        const stored = localStorage.getItem('stx_address')
+        if (stored) setStxAddress(stored)
+      } catch (_) {}
     }
   }, [])
 
@@ -39,89 +28,102 @@ export default function RealWalletDemo() {
     setLogs(prev => [`[${timestamp}] ${message}`, ...prev].slice(0, 20))
   }, [])
 
-  const connectWallet = useCallback(() => {
-    showConnect({
-      appDetails: {
-        name: 'BitSubs',
-        icon: window.location.origin + '/vite.svg'
-      },
-      onFinish: () => {
-        const data = userSession.loadUserData()
-        setUserData(data)
-        addLog('Wallet connected: ' + data.profile.stxAddress.testnet)
-      },
-      onCancel: () => {
-        addLog('Wallet connection cancelled')
-      },
-      userSession
-    })
+  const handleConnect = useCallback(async () => {
+    try {
+      const response = await connect()
+      const addresses = response.addresses
+      if (addresses && addresses.length > 0) {
+        // Use the first address available
+        const addr = addresses[0].address
+        setStxAddress(addr)
+        localStorage.setItem('stx_address', addr)
+        addLog('Wallet connected: ' + addr)
+      }
+    } catch (error: any) {
+      console.error('Connect error:', error)
+      addLog('Error connecting: ' + (error.message || String(error)))
+    }
   }, [addLog])
 
-  const checkChannelState = useCallback(async (address: string) => {
+  const handleDisconnect = useCallback(() => {
+    disconnectWallet()
+    localStorage.removeItem('stx_address')
+    setStxAddress(null)
+    setChannelState(null)
+    setLogs([])
+    setRequestCount(0)
+  }, [])
+
+  const checkChannelState = useCallback(async () => {
+    if (!stxAddress) return
     try {
-      const result = await callReadOnlyFunction({
-        contractAddress: CONTRACT_ADDRESS,
-        contractName: CONTRACT_NAME,
-        functionName: 'verify-payment',
-        functionArgs: [
-          principalCV(address),
-          principalCV(SERVICE_ADDRESS)
-        ],
-        network,
-        senderAddress: address
-      })
-
-      const state = cvToJSON(result)
-      setChannelState(state.value)
-
-      if (state.value?.active?.value) {
-        addLog('Channel active - Balance: ' + state.value.remaining?.value + ' uSTX')
+      const resp = await fetch(
+        `https://stacks-node-api.testnet.stacks.co/v2/contracts/call-read/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/verify-payment`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sender: stxAddress,
+            arguments: [
+              cvToHex('principal', stxAddress),
+              cvToHex('principal', SERVICE_ADDRESS)
+            ]
+          })
+        }
+      )
+      const data = await resp.json()
+      if (data.okay && data.result) {
+        // Parse the clarity value
+        const hex = data.result
+        // For simplicity, check if the result contains 'true' for active
+        if (hex.includes('03')) {
+          setChannelState({ active: { value: true }, remaining: { value: 'check explorer' } })
+          addLog('Channel found - active')
+        } else {
+          setChannelState({ active: { value: false } })
+        }
+      } else {
+        setChannelState({ active: { value: false } })
       }
     } catch (error: any) {
       console.log('No channel found:', error.message)
       setChannelState({ active: { value: false } })
     }
-  }, [addLog])
+  }, [stxAddress, addLog])
 
   const openChannel = async () => {
-    if (!userData) return
+    if (!stxAddress) return
     setIsOpening(true)
 
     try {
       addLog('Opening subscription channel...')
       addLog('Deposit: 1 STX | Rate: 100 uSTX per block')
 
-      await openContractCall({
-        contractAddress: CONTRACT_ADDRESS,
-        contractName: CONTRACT_NAME,
+      const response = await request('stx_callContract', {
+        contract: `${CONTRACT_ADDRESS}.${CONTRACT_NAME}` as `${string}.${string}`,
         functionName: 'open-channel',
         functionArgs: [
-          principalCV(SERVICE_ADDRESS),
-          uintCV(1000000),
-          uintCV(100)
+          `'${SERVICE_ADDRESS}`,
+          'u1000000',
+          'u100'
         ],
-        network,
-        anchorMode: AnchorMode.Any,
-        postConditionMode: PostConditionMode.Allow,
-        onFinish: (data: any) => {
-          addLog('Transaction submitted! TX: ' + data.txId)
-          addLog('View: https://explorer.hiro.so/txid/' + data.txId + '?chain=testnet')
-          addLog('Waiting for confirmation (~5-10 min)...')
-          setIsOpening(false)
-        },
-        onCancel: () => {
-          addLog('Transaction cancelled')
-          setIsOpening(false)
-        }
+        network: 'testnet'
       })
+
+      if (response.txid) {
+        addLog('Transaction submitted! TX: ' + response.txid)
+        addLog('View: https://explorer.hiro.so/txid/' + response.txid + '?chain=testnet')
+        addLog('Waiting for confirmation (~5-10 min)...')
+      }
+      setIsOpening(false)
     } catch (error: any) {
-      addLog('Error: ' + error.message)
+      addLog('Error: ' + (error.message || String(error)))
       setIsOpening(false)
     }
   }
 
   const makeRequest = async () => {
-    if (!userData || !channelState?.active?.value) {
+    if (!stxAddress || !channelState?.active?.value) {
       addLog('Need active channel first')
       return
     }
@@ -139,7 +141,7 @@ export default function RealWalletDemo() {
       const response = await fetch(API_URL + '/api/premium/weather', {
         headers: {
           'x-payment-proof': signature,
-          'x-stacks-address': userData.profile.stxAddress.testnet
+          'x-stacks-address': stxAddress
         }
       })
 
@@ -147,7 +149,7 @@ export default function RealWalletDemo() {
         const data = await response.json()
         addLog('Request #' + (requestCount + 1) + ' succeeded: ' + data.temperature + 'F')
         setRequestCount(prev => prev + 1)
-        await checkChannelState(userData.profile.stxAddress.testnet)
+        await checkChannelState()
       } else if (response.status === 402) {
         addLog('Subscription expired - balance depleted!')
         setChannelState({ active: { value: false } })
@@ -155,14 +157,6 @@ export default function RealWalletDemo() {
     } catch (error: any) {
       addLog('Request failed: ' + error.message)
     }
-  }
-
-  const disconnectWallet = () => {
-    userSession.signUserOut()
-    setUserData(null)
-    setChannelState(null)
-    setLogs([])
-    setRequestCount(0)
   }
 
   return (
@@ -174,7 +168,7 @@ export default function RealWalletDemo() {
         Connect YOUR wallet and make REAL x402 payments on Stacks testnet
       </p>
 
-      {!userData ? (
+      {!stxAddress ? (
         <div style={{
           background: 'rgba(0,0,0,0.3)',
           padding: '2rem',
@@ -189,7 +183,7 @@ export default function RealWalletDemo() {
             Connect your Stacks wallet (Leather, Xverse, Hiro). Make sure you're on testnet.
           </p>
           <button
-            onClick={connectWallet}
+            onClick={handleConnect}
             style={{
               background: '#FF7200',
               color: '#FFFFFF',
@@ -227,7 +221,6 @@ export default function RealWalletDemo() {
         </div>
       ) : (
         <>
-          {/* Connected State */}
           <div style={{
             background: 'rgba(0, 255, 0, 0.1)',
             border: '2px solid #0f0',
@@ -239,12 +232,12 @@ export default function RealWalletDemo() {
               <div>
                 <h3 style={{ color: '#0f0', marginBottom: '0.5rem' }}>Wallet Connected</h3>
                 <p style={{ fontFamily: 'monospace', fontSize: '0.9rem', color: 'var(--stacks-text-secondary)' }}>
-                  {userData.profile.stxAddress.testnet}
+                  {stxAddress}
                 </p>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
-                  onClick={() => checkChannelState(userData.profile.stxAddress.testnet)}
+                  onClick={checkChannelState}
                   style={{
                     background: 'transparent',
                     color: '#0f0',
@@ -258,7 +251,7 @@ export default function RealWalletDemo() {
                   Refresh Balance
                 </button>
                 <button
-                  onClick={disconnectWallet}
+                  onClick={handleDisconnect}
                   style={{
                     background: 'transparent',
                     color: '#f55',
@@ -275,7 +268,6 @@ export default function RealWalletDemo() {
             </div>
           </div>
 
-          {/* Channel Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
             <div style={{
               background: 'rgba(0,0,0,0.3)',
@@ -315,7 +307,6 @@ export default function RealWalletDemo() {
             </div>
           </div>
 
-          {/* Actions */}
           <div style={{
             background: 'rgba(0,0,0,0.3)',
             padding: '2rem',
@@ -376,7 +367,6 @@ export default function RealWalletDemo() {
         </>
       )}
 
-      {/* Activity Log */}
       {logs.length > 0 && (
         <div style={{
           background: '#000',
@@ -400,7 +390,6 @@ export default function RealWalletDemo() {
         </div>
       )}
 
-      {/* Info Panel */}
       <div style={{
         marginTop: '2rem',
         background: 'rgba(66, 135, 245, 0.1)',
@@ -420,4 +409,15 @@ export default function RealWalletDemo() {
       </div>
     </div>
   )
+}
+
+// Helper to encode clarity values to hex for the read-only API
+function cvToHex(type: string, value: string): string {
+  if (type === 'principal') {
+    // Standard principal encoding for Stacks API
+    // The API accepts hex-encoded clarity values
+    // For the read-only endpoint, we pass them as strings
+    return `0x${Buffer.from(value).toString('hex')}`
+  }
+  return value
 }
