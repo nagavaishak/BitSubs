@@ -506,14 +506,15 @@ function App() {
             <button
               onClick={() => setDemoMode('quick')}
               style={{
-                background: demoMode === 'quick' ? 'var(--stacks-orange)' : 'transparent',
-                color: demoMode === 'quick' ? '#000' : 'var(--stacks-orange)',
+                background: demoMode === 'quick' ? 'var(--stacks-orange)' : 'rgba(0,0,0,0.5)',
+                color: demoMode === 'quick' ? '#000' : '#fff',
                 border: '2px solid var(--stacks-orange)',
                 padding: '0.75rem 1.5rem',
                 borderRadius: '4px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '0.9rem'
+                fontSize: '0.9rem',
+                transition: 'all 0.2s'
               }}
             >
               ⚡ Quick Demo (30s)
@@ -521,14 +522,15 @@ function App() {
             <button
               onClick={() => setDemoMode('wallet')}
               style={{
-                background: demoMode === 'wallet' ? 'var(--stacks-orange)' : 'transparent',
-                color: demoMode === 'wallet' ? '#000' : 'var(--stacks-orange)',
+                background: demoMode === 'wallet' ? 'var(--stacks-orange)' : 'rgba(0,0,0,0.5)',
+                color: demoMode === 'wallet' ? '#000' : '#fff',
                 border: '2px solid var(--stacks-orange)',
                 padding: '0.75rem 1.5rem',
                 borderRadius: '4px',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '0.9rem'
+                fontSize: '0.9rem',
+                transition: 'all 0.2s'
               }}
             >
               💼 Real Wallet Demo
