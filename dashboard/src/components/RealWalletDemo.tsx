@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { AppConfig, UserSession, showConnect, openContractCall } from '@stacks/connect'
 import {
   callReadOnlyFunction,
@@ -18,6 +18,8 @@ const API_URL = 'https://bitsubs-production.up.railway.app'
 const appConfig = new AppConfig(['store_write', 'publish_data'])
 const userSession = new UserSession({ appConfig })
 
+const network = new StacksTestnet()
+
 export default function RealWalletDemo() {
   const [userData, setUserData] = useState<any>(null)
   const [channelState, setChannelState] = useState<any>(null)
@@ -32,81 +34,64 @@ export default function RealWalletDemo() {
     }
   }, [])
 
-  // Removed automatic channel checking to prevent errors
-  // Users can manually refresh balance with the button
-
-  const addLog = (message: string) => {
+  const addLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString()
     setLogs(prev => [`[${timestamp}] ${message}`, ...prev].slice(0, 20))
-  }
+  }, [])
 
-  const connectWallet = () => {
-    console.log('Connect wallet button clicked!')
-    try {
-      showConnect({
-        appDetails: {
-          name: 'BitSubs',
-          icon: window.location.origin + '/vite.svg'
-        },
-        onFinish: () => {
-          console.log('Wallet connection finished')
-          const data = userSession.loadUserData()
-          setUserData(data)
-          addLog('✅ Wallet connected')
-          checkChannelState()
-        },
-        onCancel: () => {
-          console.log('Wallet connection cancelled')
-          addLog('❌ Wallet connection cancelled')
-        },
-        userSession
-      })
-    } catch (error: any) {
-      console.error('Error connecting wallet:', error)
-      addLog(`❌ Error: ${error.message}`)
-    }
-  }
+  const connectWallet = useCallback(() => {
+    showConnect({
+      appDetails: {
+        name: 'BitSubs',
+        icon: window.location.origin + '/vite.svg'
+      },
+      onFinish: () => {
+        const data = userSession.loadUserData()
+        setUserData(data)
+        addLog('Wallet connected: ' + data.profile.stxAddress.testnet)
+      },
+      onCancel: () => {
+        addLog('Wallet connection cancelled')
+      },
+      userSession
+    })
+  }, [addLog])
 
-  const checkChannelState = async () => {
-    if (!userData) return
-
+  const checkChannelState = useCallback(async (address: string) => {
     try {
       const result = await callReadOnlyFunction({
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
         functionName: 'verify-payment',
         functionArgs: [
-          principalCV(userData.profile.stxAddress.testnet),
+          principalCV(address),
           principalCV(SERVICE_ADDRESS)
         ],
-        network: new StacksTestnet(),
-        senderAddress: userData.profile.stxAddress.testnet
+        network,
+        senderAddress: address
       })
 
       const state = cvToJSON(result)
       setChannelState(state.value)
 
       if (state.value?.active?.value) {
-        addLog(`📊 Channel active - Balance: ${state.value.remaining?.value} µSTX`)
+        addLog('Channel active - Balance: ' + state.value.remaining?.value + ' uSTX')
       }
     } catch (error: any) {
-      // Silently set channel as closed if not found (expected behavior)
       console.log('No channel found:', error.message)
       setChannelState({ active: { value: false } })
-      // Don't show error in UI - it's expected when no channel exists
     }
-  }
+  }, [addLog])
 
   const openChannel = async () => {
     if (!userData) return
     setIsOpening(true)
 
     try {
-      addLog('💰 Opening subscription channel...')
-      addLog('   Deposit: 1 STX (1,000,000 µSTX)')
-      addLog('   Rate: 100 µSTX per block')
+      addLog('Opening subscription channel...')
+      addLog('Deposit: 1 STX | Rate: 100 uSTX per block')
 
-      const txOptions = {
+      await openContractCall({
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
         functionName: 'open-channel',
@@ -115,72 +100,43 @@ export default function RealWalletDemo() {
           uintCV(1000000),
           uintCV(100)
         ],
-        network: new StacksTestnet(),
+        network,
         anchorMode: AnchorMode.Any,
         postConditionMode: PostConditionMode.Allow,
         onFinish: (data: any) => {
-          addLog(`✅ Transaction submitted!`)
-          addLog(`   TX: ${data.txId}`)
-          addLog(`   View: https://explorer.hiro.so/txid/${data.txId}?chain=testnet`)
-          addLog('   ⏳ Waiting for confirmation (~5-10 min)...')
-          pollForConfirmation(data.txId)
+          addLog('Transaction submitted! TX: ' + data.txId)
+          addLog('View: https://explorer.hiro.so/txid/' + data.txId + '?chain=testnet')
+          addLog('Waiting for confirmation (~5-10 min)...')
+          setIsOpening(false)
         },
         onCancel: () => {
-          addLog('❌ Transaction cancelled')
+          addLog('Transaction cancelled')
           setIsOpening(false)
         }
-      }
-
-      await openContractCall(txOptions)
+      })
     } catch (error: any) {
-      addLog(`❌ Error: ${error.message}`)
+      addLog('Error: ' + error.message)
       setIsOpening(false)
     }
   }
 
-  const pollForConfirmation = async (_txId: string) => {
-    addLog('🔄 Polling for confirmation...')
-
-    for (let i = 0; i < 40; i++) {
-      await sleep(15000) // Poll every 15 seconds
-
-      try {
-        await checkChannelState()
-
-        if (channelState?.active?.value) {
-          addLog('✅ Channel confirmed on-chain!')
-          addLog('🎉 Ready to make x402 requests!')
-          setIsOpening(false)
-          return
-        }
-      } catch (e) {
-        // Keep polling
-      }
-    }
-
-    addLog('⚠️ Confirmation taking longer than expected. Refresh page.')
-    setIsOpening(false)
-  }
-
   const makeRequest = async () => {
     if (!userData || !channelState?.active?.value) {
-      addLog('❌ Need active channel first')
+      addLog('Need active channel first')
       return
     }
 
     try {
-      addLog(`📡 Making x402 request #${requestCount + 1}...`)
+      addLog('Making x402 request #' + (requestCount + 1) + '...')
 
-      // Generate payment proof
-      const sigRes = await fetch(`${API_URL}/api/demo/sign`, {
+      const sigRes = await fetch(API_URL + '/api/demo/sign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ resource: '/api/premium/weather' })
       })
       const { signature } = await sigRes.json()
 
-      // Make request with proof
-      const response = await fetch(`${API_URL}/api/premium/weather`, {
+      const response = await fetch(API_URL + '/api/premium/weather', {
         headers: {
           'x-payment-proof': signature,
           'x-stacks-address': userData.profile.stxAddress.testnet
@@ -189,19 +145,25 @@ export default function RealWalletDemo() {
 
       if (response.status === 200) {
         const data = await response.json()
-        addLog(`✅ Request #${requestCount + 1} succeeded: ${data.temperature}°F`)
+        addLog('Request #' + (requestCount + 1) + ' succeeded: ' + data.temperature + 'F')
         setRequestCount(prev => prev + 1)
-        await checkChannelState()
+        await checkChannelState(userData.profile.stxAddress.testnet)
       } else if (response.status === 402) {
-        addLog('⛔ Subscription expired - balance depleted!')
+        addLog('Subscription expired - balance depleted!')
         setChannelState({ active: { value: false } })
       }
     } catch (error: any) {
-      addLog(`❌ Request failed: ${error.message}`)
+      addLog('Request failed: ' + error.message)
     }
   }
 
-  const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+  const disconnectWallet = () => {
+    userSession.signUserOut()
+    setUserData(null)
+    setChannelState(null)
+    setLogs([])
+    setRequestCount(0)
+  }
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
@@ -249,7 +211,7 @@ export default function RealWalletDemo() {
               e.currentTarget.style.transform = 'translateY(0)'
             }}
           >
-            🔗 Connect Stacks Wallet
+            Connect Stacks Wallet
           </button>
           <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--stacks-text-secondary)' }}>
             Need testnet STX?{' '}
@@ -259,7 +221,7 @@ export default function RealWalletDemo() {
               rel="noopener noreferrer"
               style={{ color: 'var(--stacks-orange)', textDecoration: 'underline' }}
             >
-              Get from faucet →
+              Get from faucet
             </a>
           </p>
         </div>
@@ -275,25 +237,41 @@ export default function RealWalletDemo() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ color: '#0f0', marginBottom: '0.5rem' }}>✅ Wallet Connected</h3>
+                <h3 style={{ color: '#0f0', marginBottom: '0.5rem' }}>Wallet Connected</h3>
                 <p style={{ fontFamily: 'monospace', fontSize: '0.9rem', color: 'var(--stacks-text-secondary)' }}>
                   {userData.profile.stxAddress.testnet}
                 </p>
               </div>
-              <button
-                onClick={checkChannelState}
-                style={{
-                  background: 'transparent',
-                  color: '#0f0',
-                  border: '1px solid #0f0',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-              >
-                Refresh Balance
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => checkChannelState(userData.profile.stxAddress.testnet)}
+                  style={{
+                    background: 'transparent',
+                    color: '#0f0',
+                    border: '1px solid #0f0',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Refresh Balance
+                </button>
+                <button
+                  onClick={disconnectWallet}
+                  style={{
+                    background: 'transparent',
+                    color: '#f55',
+                    border: '1px solid #f55',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  Disconnect
+                </button>
+              </div>
             </div>
           </div>
 
@@ -308,14 +286,14 @@ export default function RealWalletDemo() {
               <h4 style={{ marginBottom: '0.5rem', color: 'var(--stacks-text-secondary)' }}>Channel Status</h4>
               {channelState?.active?.value ? (
                 <div>
-                  <p style={{ fontSize: '2rem', color: '#0f0', fontWeight: 'bold' }}>✅ Active</p>
+                  <p style={{ fontSize: '2rem', color: '#0f0', fontWeight: 'bold' }}>Active</p>
                   <p style={{ fontSize: '0.9rem', color: 'var(--stacks-text-secondary)', marginTop: '0.5rem' }}>
-                    Balance: {channelState.remaining?.value} µSTX
+                    Balance: {channelState.remaining?.value} uSTX
                   </p>
                 </div>
               ) : (
                 <div>
-                  <p style={{ fontSize: '2rem', color: '#666', fontWeight: 'bold' }}>⚪ Closed</p>
+                  <p style={{ fontSize: '2rem', color: '#666', fontWeight: 'bold' }}>Closed</p>
                   <p style={{ fontSize: '0.9rem', color: 'var(--stacks-text-secondary)', marginTop: '0.5rem' }}>
                     Open a channel to start
                   </p>
@@ -364,10 +342,10 @@ export default function RealWalletDemo() {
                     opacity: isOpening ? 0.5 : 1
                   }}
                 >
-                  {isOpening ? '⏳ Opening Channel...' : '🔓 Open Subscription Channel'}
+                  {isOpening ? 'Opening Channel...' : 'Open Subscription Channel'}
                 </button>
                 <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--stacks-text-secondary)' }}>
-                  Cost: 1 STX deposit • Rate: 100 µSTX per block • Wallet will prompt for signature
+                  Cost: 1 STX deposit | Rate: 100 uSTX per block | Wallet will prompt for signature
                 </p>
               </div>
             )}
@@ -387,7 +365,7 @@ export default function RealWalletDemo() {
                     cursor: 'pointer'
                   }}
                 >
-                  📡 Make x402 Request
+                  Make x402 Request
                 </button>
                 <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--stacks-text-secondary)' }}>
                   Each request verifies your channel balance and returns weather data
@@ -406,7 +384,7 @@ export default function RealWalletDemo() {
           borderRadius: '8px',
           border: '1px solid var(--stacks-orange)'
         }}>
-          <h3 style={{ color: 'var(--stacks-orange)', marginBottom: '1rem' }}>🔍 Live Activity Log</h3>
+          <h3 style={{ color: 'var(--stacks-orange)', marginBottom: '1rem' }}>Live Activity Log</h3>
           <div style={{
             fontFamily: 'monospace',
             fontSize: '0.85rem',
@@ -430,7 +408,7 @@ export default function RealWalletDemo() {
         padding: '1.5rem',
         borderRadius: '8px'
       }}>
-        <h3 style={{ color: '#4287f5', marginBottom: '1rem' }}>💡 What You're Testing</h3>
+        <h3 style={{ color: '#4287f5', marginBottom: '1rem' }}>What You're Testing</h3>
         <ul style={{ listStyle: 'disc', paddingLeft: '2rem', color: 'var(--stacks-text-secondary)', lineHeight: '1.8' }}>
           <li><strong style={{ color: 'var(--stacks-white)' }}>Real x402 protocol</strong> on Stacks testnet</li>
           <li><strong style={{ color: 'var(--stacks-white)' }}>Your own wallet</strong> making real payments</li>
