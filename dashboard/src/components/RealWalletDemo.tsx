@@ -11,6 +11,7 @@ const API_URL = 'https://bitsubs-production.up.railway.app'
 export default function RealWalletDemo() {
   const [stxAddress, setStxAddress] = useState<string | null>(null)
   const [channelState, setChannelState] = useState<any>(null)
+  const [channelExists, setChannelExists] = useState(false)
   const [logs, setLogs] = useState<string[]>([])
   const [isOpening, setIsOpening] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
@@ -64,6 +65,7 @@ export default function RealWalletDemo() {
     localStorage.removeItem('stx_address')
     setStxAddress(null)
     setChannelState(null)
+    setChannelExists(false)
     setLogs([])
     setRequestCount(0)
   }, [])
@@ -73,11 +75,12 @@ export default function RealWalletDemo() {
 
     addLog('Checking channel state...')
 
+    // First check if the channel EXISTS in the map using get-channel-info
     try {
-      const result = await fetchCallReadOnlyFunction({
+      const infoResult = await fetchCallReadOnlyFunction({
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
-        functionName: 'verify-payment',
+        functionName: 'get-channel-info',
         functionArgs: [
           principalCV(stxAddress),
           principalCV(SERVICE_ADDRESS)
@@ -86,20 +89,54 @@ export default function RealWalletDemo() {
         senderAddress: stxAddress
       })
 
-      const state = cvToJSON(result)
-      console.log('Channel state:', state)
+      const infoState = cvToJSON(infoResult)
+      console.log('Channel info:', infoState)
 
-      if (state.value?.active?.value === true) {
-        setChannelState(state.value)
-        addLog(`Channel ACTIVE - Balance: ${state.value.remaining?.value || 'N/A'} µSTX`)
+      // If get-channel-info returns ok, the channel EXISTS in the map
+      if (infoState.success) {
+        setChannelExists(true)
+
+        // Now check verify-payment for active status and balance
+        try {
+          const verifyResult = await fetchCallReadOnlyFunction({
+            contractAddress: CONTRACT_ADDRESS,
+            contractName: CONTRACT_NAME,
+            functionName: 'verify-payment',
+            functionArgs: [
+              principalCV(stxAddress),
+              principalCV(SERVICE_ADDRESS)
+            ],
+            network: STACKS_TESTNET,
+            senderAddress: stxAddress
+          })
+
+          const verifyState = cvToJSON(verifyResult)
+          console.log('Verify payment:', verifyState)
+
+          if (verifyState.value?.active?.value === true) {
+            setChannelState(verifyState.value)
+            addLog(`Channel ACTIVE - Balance: ${verifyState.value.remaining?.value || 'N/A'} µSTX`)
+          } else {
+            setChannelState({ active: { value: false }, exists: true })
+            addLog(`Channel EXISTS but balance depleted (0 µSTX remaining). Close it to open a new one.`)
+          }
+        } catch (verifyError: any) {
+          // Channel exists but verify failed - still show close button
+          setChannelState({ active: { value: false }, exists: true })
+          addLog('Channel exists but could not verify balance. You can close it.')
+        }
       } else {
+        // Channel doesn't exist
+        setChannelExists(false)
         setChannelState({ active: { value: false } })
-        addLog('Channel not found or closed')
+        addLog('No channel found. You can open a new one.')
       }
     } catch (error: any) {
       console.error('Error checking channel:', error)
+      // If get-channel-info throws, channel doesn't exist
+      setChannelExists(false)
       setChannelState({ active: { value: false } })
-      addLog('Error checking channel: ' + error.message)
+      addLog('No channel found. You can open a new one.')
     }
   }, [stxAddress, addLog])
 
@@ -143,8 +180,9 @@ export default function RealWalletDemo() {
                 const errorCode = txData.tx_result?.repr
                 if (errorCode?.includes('u409')) {
                   addLog('ERROR: Channel already exists! Checking existing channel...')
+                  setChannelExists(true)
                   await checkChannelState()
-                  addLog('Please close the existing channel first using the button below')
+                  addLog('Please close the existing channel first using the red button below')
                 } else {
                   addLog('Transaction failed: ' + errorCode)
                 }
@@ -369,9 +407,16 @@ export default function RealWalletDemo() {
                     Balance: {channelState.remaining?.value} uSTX
                   </p>
                 </div>
+              ) : channelExists ? (
+                <div>
+                  <p style={{ fontSize: '2rem', color: '#f90', fontWeight: 'bold' }}>Depleted</p>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--stacks-text-secondary)', marginTop: '0.5rem' }}>
+                    Balance: 0 uSTX - Close to open new channel
+                  </p>
+                </div>
               ) : (
                 <div>
-                  <p style={{ fontSize: '2rem', color: '#666', fontWeight: 'bold' }}>Closed</p>
+                  <p style={{ fontSize: '2rem', color: '#666', fontWeight: 'bold' }}>No Channel</p>
                   <p style={{ fontSize: '0.9rem', color: 'var(--stacks-text-secondary)', marginTop: '0.5rem' }}>
                     Open a channel to start
                   </p>
@@ -402,7 +447,8 @@ export default function RealWalletDemo() {
           }}>
             <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--stacks-orange)' }}>Actions</h3>
 
-            {!channelState?.active?.value && (
+            {/* No channel exists - show Open button */}
+            {!channelExists && !channelState?.active?.value && (
               <div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                   <button
@@ -444,6 +490,35 @@ export default function RealWalletDemo() {
               </div>
             )}
 
+            {/* Channel exists but depleted - show Close button */}
+            {channelExists && !channelState?.active?.value && (
+              <div>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <button
+                    onClick={closeChannel}
+                    disabled={isClosing}
+                    style={{
+                      background: '#f55',
+                      color: '#fff',
+                      padding: '1rem 2rem',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      cursor: isClosing ? 'not-allowed' : 'pointer',
+                      opacity: isClosing ? 0.5 : 1
+                    }}
+                  >
+                    {isClosing ? 'Closing...' : 'Close Depleted Channel'}
+                  </button>
+                </div>
+                <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#f90' }}>
+                  Your old channel is depleted (0 balance). Close it first, then you can open a new one.
+                </p>
+              </div>
+            )}
+
+            {/* Channel active - show Make Request + Close buttons */}
             {channelState?.active?.value && (
               <div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
