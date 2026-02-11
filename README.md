@@ -2,13 +2,40 @@
 
 **The first way to run continuous subscriptions on Bitcoin.**
 
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]() [![Clarity](https://img.shields.io/badge/clarity-v2-blue)]() [![TypeScript](https://img.shields.io/badge/typescript-5.3-blue)]()
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]() [![Clarity](https://img.shields.io/badge/clarity-v2-blue)]() [![TypeScript](https://img.shields.io/badge/typescript-5.3-blue)]() [![License](https://img.shields.io/badge/license-MIT-blue)]() [![x402](https://img.shields.io/badge/x402-compliant-orange)](https://x402.org)
+
+**🌐 [Live Demo](https://bitsubs.vercel.app)** | **🚀 [Live API](https://bitsubs-production.up.railway.app/health)** | **📝 [Contract Explorer](https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet)**
 
 ## What This Is
 
 BitSubs enables continuous subscription access using payment channels on Stacks. Services stay open while STX micropayments stream, and automatically cut off when the channel balance depletes.
 
 **Key Innovation**: 1000 subscription requests = 2 on-chain transactions (99.8% gas reduction)
+
+## Try It Now
+
+**Test the live x402 API:**
+
+```bash
+curl https://bitsubs-production.up.railway.app/api/premium/weather
+```
+
+Returns a 402 Payment Required response with x402 payment instructions:
+```json
+{
+  "error": "Payment Required",
+  "x402": {
+    "version": 1,
+    "paymentInstructions": {
+      "network": "stacks-testnet",
+      "tokens": [...],
+      "description": "Open subscription channel for continuous API access"
+    }
+  }
+}
+```
+
+**Interactive Demo:** Visit [bitsubs.vercel.app](https://bitsubs.vercel.app) to see the subscription system in action!
 
 ## How It Works
 
@@ -298,10 +325,10 @@ const address = client.getAddress();
 import { x402SubscriptionMiddleware } from './src/middleware/x402-subscription';
 
 app.use('/api/premium/*', x402SubscriptionMiddleware({
-  contractAddress: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
+  contractAddress: 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C',
   contractName: 'subscription-channel',
   network: 'testnet',
-  serviceAddress: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM'
+  serviceAddress: 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C'
 }));
 
 app.get('/api/premium/data', (req, res) => {
@@ -325,6 +352,20 @@ Real-time market data access that automatically gates when subscription expires.
 
 ### IoT Device Access
 Smart devices paying for network/API access proportional to usage time.
+
+## Live Deployments
+
+### Production Infrastructure
+- **Dashboard**: https://bitsubs.vercel.app (Vercel)
+- **API**: https://bitsubs-production.up.railway.app (Railway)
+- **Contract**: `STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel` (Stacks Testnet)
+- **Explorer**: [View on Stacks Explorer](https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet)
+
+### API Endpoints
+- `GET /health` - Health check
+- `GET /api/premium/weather` - Protected endpoint (requires subscription)
+- `GET /api/premium/market-data` - Protected endpoint (requires subscription)
+- `GET /api/premium/news` - Protected endpoint (requires subscription)
 
 ## Technical Details
 
@@ -377,7 +418,7 @@ cd bitsubs && npm test
 
 - [ ] sBTC support for Bitcoin-native subscriptions
 - [ ] Multi-token support (USDC, USDCx)
-- [ ] Dashboard UI for channel management
+- [x] Dashboard UI for channel management ✅ [Live](https://bitsubs.vercel.app)
 - [ ] Batch channel operations
 - [ ] Subscription marketplace
 
@@ -398,11 +439,13 @@ Inspired by:
 - Cheddr (payment channels)
 - Lightning Network (Bitcoin L2 channels)
 
-## Contact
+## Links
 
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Twitter: [@yourhandle](https://twitter.com/yourhandle)
-- Discord: your#discord
+- **Live Dashboard**: https://bitsubs.vercel.app
+- **Live API**: https://bitsubs-production.up.railway.app
+- **GitHub**: https://github.com/nagavaishak/BitSubs
+- **Contract Explorer**: https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet
+- **x402 Protocol**: https://x402.org
 
 ---
 
