@@ -72,8 +72,8 @@ export default function Docs() {
 import { openContractCall } from '@stacks/connect';
 
 await openContractCall({
-  contractAddress: 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C',
-  contractName: 'subscription-channel',
+  contractAddress: 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP',
+  contractName: 'subscription-channel-v2',
   functionName: 'open-channel',
   functionArgs: [
     principalCV('SERVICE_ADDRESS'),
@@ -126,8 +126,8 @@ await openContractCall({
 {`import { x402SubscriptionMiddleware } from '@bitsubs/middleware';
 
 app.use('/api/premium/*', x402SubscriptionMiddleware({
-  contractAddress: 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C',
-  contractName: 'subscription-channel',
+  contractAddress: 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP',
+  contractName: 'subscription-channel-v2',
   serviceAddress: 'YOUR_STACKS_ADDRESS',
   network: 'testnet'
 }));
@@ -212,7 +212,7 @@ app.use('/api/premium/*', x402SubscriptionMiddleware({
           <a href="https://bitsubs-production.up.railway.app" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--stacks-orange)', textDecoration: 'underline' }}>
             Live API →
           </a>
-          <a href="https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--stacks-orange)', textDecoration: 'underline' }}>
+          <a href="https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--stacks-orange)', textDecoration: 'underline' }}>
             Contract Explorer →
           </a>
         </div>

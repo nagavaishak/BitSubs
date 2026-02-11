@@ -48,7 +48,7 @@ function App() {
       gasSavings: 0
     },
     blockchain: {
-      contractAddress: 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel',
+      contractAddress: 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP.subscription-channel-v2',
       txId: null,
       blockHeight: 0
     }
@@ -590,7 +590,7 @@ function App() {
               [BitSubs] x402 Payment Channels on Stacks
             </div>
             <div className="footer-contract">
-              Contract: STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel
+              Contract: ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP.subscription-channel-v2
             </div>
           </div>
           <div className="footer-right">

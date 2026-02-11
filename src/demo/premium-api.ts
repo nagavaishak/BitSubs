@@ -5,9 +5,9 @@ const app = express();
 app.use(express.json());
 
 // Configuration (Deployed to Testnet)
-const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C';
-const CONTRACT_NAME = 'subscription-channel';
-const SERVICE_ADDRESS = process.env.SERVICE_ADDRESS || 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C';
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP';
+const CONTRACT_NAME = 'subscription-channel-v2';
+const SERVICE_ADDRESS = process.env.SERVICE_ADDRESS || 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP';
 
 // Apply middleware to premium endpoints
 app.use('/api/premium/*', x402SubscriptionMiddleware({

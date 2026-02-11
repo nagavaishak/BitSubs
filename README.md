@@ -4,7 +4,7 @@
 
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]() [![Clarity](https://img.shields.io/badge/clarity-v2-blue)]() [![TypeScript](https://img.shields.io/badge/typescript-5.3-blue)]() [![License](https://img.shields.io/badge/license-MIT-blue)]() [![x402](https://img.shields.io/badge/x402-compliant-orange)](https://x402.org)
 
-**🌐 [Live Demo](https://bitsubs.vercel.app)** | **🚀 [Live API](https://bitsubs-production.up.railway.app/health)** | **📝 [Contract Explorer](https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet)**
+**🌐 [Live Demo](https://bitsubs.vercel.app)** | **🚀 [Live API](https://bitsubs-production.up.railway.app/health)** | **📝 [Contract Explorer](https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet)**
 
 ## What This Is
 
@@ -81,7 +81,7 @@ BitSubs implements the x402 payment protocol for Stacks, enabling standardized p
           "recipient": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
           "contractCall": {
             "contractAddress": "ST...",
-            "contractName": "subscription-channel",
+            "contractName": "subscription-channel-v2",
             "functionName": "open-channel",
             "functionArgs": ["principal:...", "uint:1000000", "uint:100"]
           }
@@ -92,7 +92,7 @@ BitSubs implements the x402 payment protocol for Stacks, enabling standardized p
           "recipient": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
           "contractCall": {
             "contractAddress": "ST...",
-            "contractName": "subscription-channel",
+            "contractName": "subscription-channel-v2",
             "functionName": "open-channel-sbtc",
             "functionArgs": ["principal:...", "uint:10000", "uint:1"]
           }
@@ -220,9 +220,9 @@ npm run demo
 bitsubs/
 ├── bitsubs/                          # Clarinet project
 │   ├── contracts/
-│   │   └── subscription-channel.clar # Core Clarity contract
+│   │   └── subscription-channel-v2.clar # Core Clarity contract
 │   ├── tests/
-│   │   └── subscription-channel.test.ts
+│   │   └── subscription-channel-v2.test.ts
 │   └── Clarinet.toml
 ├── src/
 │   ├── middleware/
@@ -338,10 +338,10 @@ const address = client.getAddress();
 import { x402SubscriptionMiddleware } from './src/middleware/x402-subscription';
 
 app.use('/api/premium/*', x402SubscriptionMiddleware({
-  contractAddress: 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C',
-  contractName: 'subscription-channel',
+  contractAddress: 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP',
+  contractName: 'subscription-channel-v2',
   network: 'testnet',
-  serviceAddress: 'STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C'
+  serviceAddress: 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP'
 }));
 
 app.get('/api/premium/data', (req, res) => {
@@ -371,8 +371,8 @@ Smart devices paying for network/API access proportional to usage time.
 ### Production Infrastructure
 - **Dashboard**: https://bitsubs.vercel.app (Vercel)
 - **API**: https://bitsubs-production.up.railway.app (Railway)
-- **Contract**: `STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel` (Stacks Testnet)
-- **Explorer**: [View on Stacks Explorer](https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet)
+- **Contract**: `ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP.subscription-channel-v2` (Stacks Testnet)
+- **Explorer**: [View on Stacks Explorer](https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet)
 
 ### API Endpoints
 - `GET /health` - Health check
@@ -390,8 +390,8 @@ Smart devices paying for network/API access proportional to usage time.
 - **Testing**: Vitest + Clarinet
 - **Gas Optimization**: Read-only verification (no per-request writes)
 - **x402 Compliance**: Full schema compliance with payment channel verification
-- **Deployed Contract**: `STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel` (testnet)
-- **Explorer**: https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet
+- **Deployed Contract**: `ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP.subscription-channel-v2` (testnet)
+- **Explorer**: https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet
 
 ## Testing
 
@@ -457,7 +457,7 @@ Inspired by:
 - **Live Dashboard**: https://bitsubs.vercel.app
 - **Live API**: https://bitsubs-production.up.railway.app
 - **GitHub**: https://github.com/nagavaishak/BitSubs
-- **Contract Explorer**: https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet
+- **Contract Explorer**: https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet
 - **x402 Protocol**: https://x402.org
 
 ---

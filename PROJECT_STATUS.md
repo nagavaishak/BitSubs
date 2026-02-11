@@ -71,8 +71,8 @@
 
 ### Day 6: Testnet Deployment ✅
 - [x] Contract deployed to Stacks testnet
-  - Contract Address: `STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel`
-  - Explorer: https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet
+  - Contract Address: `ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP.subscription-channel-v2`
+  - Explorer: https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet
 - [x] x402 middleware updated to full protocol compliance
   - Proper x402 schema in 402 responses
   - Payment proof signature verification
@@ -98,7 +98,7 @@
 ## 📊 Test Results
 
 ```
-✓ tests/subscription-channel.test.ts (13 tests) 130ms
+✓ tests/subscription-channel-v2.test.ts (13 tests) 130ms
   ✓ can open a subscription channel
   ✓ prevents duplicate channel creation
   ✓ verifies payment with correct mathematical balance drain
@@ -125,9 +125,9 @@ Tests  13 passed (13)
 BitSubs/
 ├── bitsubs/                          # Clarinet project
 │   ├── contracts/
-│   │   └── subscription-channel.clar # 141 lines - Core contract
+│   │   └── subscription-channel-v2.clar # 141 lines - Core contract
 │   ├── tests/
-│   │   └── subscription-channel.test.ts # 418 lines - Comprehensive tests
+│   │   └── subscription-channel-v2.test.ts # 418 lines - Comprehensive tests
 │   ├── Clarinet.toml
 │   └── package.json
 ├── src/
@@ -279,8 +279,8 @@ BitSubs/
 ### Production URLs
 - **Dashboard**: https://bitsubs.vercel.app ✅ LIVE
 - **API**: https://bitsubs-production.up.railway.app ✅ LIVE
-- **Contract**: `STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel` ✅
-- **Explorer**: https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet
+- **Contract**: `ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP.subscription-channel-v2` ✅
+- **Explorer**: https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet
 
 ### Deployment Status
 - ✅ Stacks Testnet Contract: DEPLOYED & VERIFIED
