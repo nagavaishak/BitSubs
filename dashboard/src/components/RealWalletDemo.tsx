@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
 import { AppConfig, UserSession, showConnect, openContractCall } from '@stacks/connect'
 import {
-  fetchCallReadOnlyFunction,
+  callReadOnlyFunction,
   principalCV,
   uintCV,
   AnchorMode,
   cvToJSON,
   PostConditionMode
 } from '@stacks/transactions'
-import { STACKS_TESTNET } from '@stacks/network'
+import { StacksTestnet } from '@stacks/network'
 
 const CONTRACT_ADDRESS = 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP'
 const CONTRACT_NAME = 'subscription-channel-v2'
@@ -79,7 +79,7 @@ export default function RealWalletDemo() {
     if (!userData) return
 
     try {
-      const result = await fetchCallReadOnlyFunction({
+      const result = await callReadOnlyFunction({
         contractAddress: CONTRACT_ADDRESS,
         contractName: CONTRACT_NAME,
         functionName: 'verify-payment',
@@ -87,7 +87,7 @@ export default function RealWalletDemo() {
           principalCV(userData.profile.stxAddress.testnet),
           principalCV(SERVICE_ADDRESS)
         ],
-        network: STACKS_TESTNET,
+        network: new StacksTestnet(),
         senderAddress: userData.profile.stxAddress.testnet
       })
 
@@ -121,7 +121,7 @@ export default function RealWalletDemo() {
           uintCV(1000000),
           uintCV(100)
         ],
-        network: STACKS_TESTNET,
+        network: new StacksTestnet(),
         anchorMode: AnchorMode.Any,
         postConditionMode: PostConditionMode.Allow,
         onFinish: (data: any) => {
