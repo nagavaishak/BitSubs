@@ -1,8 +1,10 @@
 import express from 'express';
+import cors from 'cors';
 import { x402SubscriptionMiddleware } from '../middleware/x402-subscription';
 
 const app = express();
 app.use(express.json());
+app.use(cors({ origin: '*' })); // CRITICAL - demo page needs this
 
 // Configuration (Deployed to Testnet)
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS || 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP';
