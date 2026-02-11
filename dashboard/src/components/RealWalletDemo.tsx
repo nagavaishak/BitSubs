@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { connect, disconnect as disconnectWallet, isConnected, request } from '@stacks/connect'
-import { principalCV, uintCV } from '@stacks/transactions'
+import { principalCV, uintCV, fetchCallReadOnlyFunction, cvToJSON } from '@stacks/transactions'
+import { STACKS_TESTNET } from '@stacks/network'
 
 const CONTRACT_ADDRESS = 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP'
 const CONTRACT_NAME = 'subscription-channel-v2'
@@ -57,38 +58,36 @@ export default function RealWalletDemo() {
 
   const checkChannelState = useCallback(async () => {
     if (!stxAddress) return
+
+    addLog('Checking channel state...')
+
     try {
-      const resp = await fetch(
-        `https://stacks-node-api.testnet.stacks.co/v2/contracts/call-read/${CONTRACT_ADDRESS}/${CONTRACT_NAME}/verify-payment`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sender: stxAddress,
-            arguments: [
-              cvToHex('principal', stxAddress),
-              cvToHex('principal', SERVICE_ADDRESS)
-            ]
-          })
-        }
-      )
-      const data = await resp.json()
-      if (data.okay && data.result) {
-        // Parse the clarity value
-        const hex = data.result
-        // For simplicity, check if the result contains 'true' for active
-        if (hex.includes('03')) {
-          setChannelState({ active: { value: true }, remaining: { value: 'check explorer' } })
-          addLog('Channel found - active')
-        } else {
-          setChannelState({ active: { value: false } })
-        }
+      const result = await fetchCallReadOnlyFunction({
+        contractAddress: CONTRACT_ADDRESS,
+        contractName: CONTRACT_NAME,
+        functionName: 'verify-payment',
+        functionArgs: [
+          principalCV(stxAddress),
+          principalCV(SERVICE_ADDRESS)
+        ],
+        network: STACKS_TESTNET,
+        senderAddress: stxAddress
+      })
+
+      const state = cvToJSON(result)
+      console.log('Channel state:', state)
+
+      if (state.value?.active?.value === true) {
+        setChannelState(state.value)
+        addLog(`Channel ACTIVE - Balance: ${state.value.remaining?.value || 'N/A'} µSTX`)
       } else {
         setChannelState({ active: { value: false } })
+        addLog('Channel not found or closed')
       }
     } catch (error: any) {
-      console.log('No channel found:', error.message)
+      console.error('Error checking channel:', error)
       setChannelState({ active: { value: false } })
+      addLog('Error checking channel: ' + error.message)
     }
   }, [stxAddress, addLog])
 
@@ -413,15 +412,4 @@ export default function RealWalletDemo() {
       </div>
     </div>
   )
-}
-
-// Helper to encode clarity values to hex for the read-only API
-function cvToHex(type: string, value: string): string {
-  if (type === 'principal') {
-    // Standard principal encoding for Stacks API
-    // The API accepts hex-encoded clarity values
-    // For the read-only endpoint, we pass them as strings
-    return `0x${Buffer.from(value).toString('hex')}`
-  }
-  return value
 }
