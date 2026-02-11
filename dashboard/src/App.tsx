@@ -7,6 +7,7 @@ import RequestFeed from './components/RequestFeed'
 import PaymentFlow from './components/PaymentFlow'
 import StatsCards from './components/StatsCards'
 import BlockchainInfo from './components/BlockchainInfo'
+import Docs from './components/Docs'
 
 interface DemoState {
   isRunning: boolean
@@ -33,6 +34,7 @@ interface DemoState {
 }
 
 function App() {
+  const [currentPage, setCurrentPage] = useState<'demo' | 'docs'>('demo')
   const [demoState, setDemoState] = useState<DemoState>({
     isRunning: false,
     channelStatus: 'closed',
@@ -155,16 +157,20 @@ function App() {
             <span className="logo-bracket">]</span>
           </div>
           <nav className="nav-links">
-            <a href="#" className="nav-link">/docs</a>
-            <a href="#" className="nav-link">/github</a>
-            <a href="#demo" className="nav-link">/demo</a>
-            <button className="cta-button">
-              <span className="btn-arrow">→</span> DEPLOY
-            </button>
+            <a href="#" onClick={(e) => { e.preventDefault(); setCurrentPage('docs'); }} className="nav-link">/docs</a>
+            <a href="https://github.com/nagavaishak/BitSubs" target="_blank" rel="noopener noreferrer" className="nav-link">/github</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); setCurrentPage('demo'); }} className="nav-link">/demo</a>
+            <a href="https://bitsubs-production.up.railway.app" target="_blank" rel="noopener noreferrer" className="cta-button">
+              <span className="btn-arrow">→</span> API
+            </a>
           </nav>
         </div>
       </header>
 
+      {currentPage === 'docs' ? (
+        <Docs />
+      ) : (
+        <>
       {/* Hero Section */}
       <section className="hero-section">
         <motion.div
@@ -232,10 +238,10 @@ function App() {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
             >
-              <a href="#demo" className="hero-button primary">
+              <a href="#demo" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: document.getElementById('demo')?.offsetTop || 0, behavior: 'smooth' }); }} className="hero-button primary">
                 RUN DEMO →
               </a>
-              <a href="#" className="hero-button secondary">
+              <a href="https://github.com/nagavaishak/BitSubs" target="_blank" rel="noopener noreferrer" className="hero-button secondary">
                 VIEW SOURCE
               </a>
             </motion.div>
@@ -588,12 +594,14 @@ function App() {
             </div>
           </div>
           <div className="footer-right">
-            <a href="#" className="footer-link">/github</a>
-            <a href="#" className="footer-link">/docs</a>
-            <a href="#" className="footer-link">/explorer</a>
+            <a href="https://github.com/nagavaishak/BitSubs" target="_blank" rel="noopener noreferrer" className="footer-link">/github</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); setCurrentPage('docs'); }} className="footer-link">/docs</a>
+            <a href="https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet" target="_blank" rel="noopener noreferrer" className="footer-link">/explorer</a>
           </div>
         </div>
       </footer>
+        </>
+      )}
     </div>
   )
 }
