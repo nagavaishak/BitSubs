@@ -2,9 +2,11 @@
   "name": "bitsubs",
   "version": "1.0.0",
   "description": "Bitcoin subscriptions via x402 on Stacks - BitSubs",
-  "main": "dist/index.js",
+  "main": "dist/demo/premium-api.js",
   "scripts": {
     "build": "tsc",
+    "start": "node dist/demo/premium-api.js",
+    "dev": "ts-node src/demo/premium-api.ts",
     "demo": "ts-node src/demo/agent.ts",
     "server": "ts-node src/demo/premium-api.ts",
     "test": "cd bitsubs && npm test"
