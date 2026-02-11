@@ -126,8 +126,6 @@ export default function RealWalletDemo() {
           const verifyState = cvToJSON(verifyResult)
           const verifyStr = JSON.stringify(verifyState)
           console.log('verify-payment raw:', verifyStr)
-          addLog('DEBUG verify: ' + verifyStr.substring(0, 200))
-
           // Parse active and remaining from the nested structure
           // cvToJSON can nest values differently, so search recursively
           const activeCV = findInCV(verifyState, 'active')
@@ -475,8 +473,8 @@ export default function RealWalletDemo() {
                     onClick={openChannel}
                     disabled={isOpening}
                     style={{
-                      background: isOpening ? '#666' : 'var(--stacks-orange)',
-                      color: '#000',
+                      background: isOpening ? '#666' : '#FF7200',
+                      color: '#fff',
                       padding: '1rem 2rem',
                       border: 'none',
                       borderRadius: '4px',

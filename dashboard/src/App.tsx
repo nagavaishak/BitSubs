@@ -506,9 +506,9 @@ function App() {
             <button
               onClick={() => setDemoMode('quick')}
               style={{
-                background: demoMode === 'quick' ? 'var(--stacks-orange)' : 'rgba(0,0,0,0.5)',
-                color: demoMode === 'quick' ? '#000' : '#fff',
-                border: '2px solid var(--stacks-orange)',
+                background: demoMode === 'quick' ? '#FF7200' : 'rgba(0,0,0,0.5)',
+                color: '#fff',
+                border: '2px solid #FF7200',
                 padding: '0.75rem 1.5rem',
                 borderRadius: '4px',
                 fontWeight: 'bold',
@@ -522,8 +522,8 @@ function App() {
             <button
               onClick={() => setDemoMode('wallet')}
               style={{
-                background: demoMode === 'wallet' ? 'var(--stacks-orange)' : 'rgba(0,0,0,0.5)',
-                color: demoMode === 'wallet' ? '#000' : '#fff',
+                background: demoMode === 'wallet' ? '#FF7200' : 'rgba(0,0,0,0.5)',
+                color: '#fff',
                 border: '2px solid var(--stacks-orange)',
                 padding: '0.75rem 1.5rem',
                 borderRadius: '4px',
