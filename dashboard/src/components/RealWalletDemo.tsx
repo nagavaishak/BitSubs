@@ -70,6 +70,14 @@ export default function RealWalletDemo() {
     setRequestCount(0)
   }, [])
 
+  // Helper to find a value in nested cvToJSON output
+  const findInCV = useCallback((obj: any, key: string): any => {
+    if (!obj || typeof obj !== 'object') return undefined
+    if (key in obj) return obj[key]
+    if (obj.value && typeof obj.value === 'object') return findInCV(obj.value, key)
+    return undefined
+  }, [])
+
   const checkChannelState = useCallback(async () => {
     if (!stxAddress) return
 
@@ -90,11 +98,16 @@ export default function RealWalletDemo() {
       })
 
       const infoState = cvToJSON(infoResult)
-      console.log('Channel info:', infoState)
+      const infoStr = JSON.stringify(infoState)
+      console.log('get-channel-info raw:', infoStr)
 
-      // If get-channel-info returns ok, the channel EXISTS in the map
-      if (infoState.success) {
+      // Check if the response is an ok (success) or err
+      // cvToJSON returns { success: true/false, ... } for response types
+      const isOk = infoStr.includes('"success":true') || (!infoStr.includes('"success":false') && !infoStr.includes('u404'))
+
+      if (isOk) {
         setChannelExists(true)
+        addLog('Channel found on-chain! Checking balance...')
 
         // Now check verify-payment for active status and balance
         try {
@@ -111,34 +124,41 @@ export default function RealWalletDemo() {
           })
 
           const verifyState = cvToJSON(verifyResult)
-          console.log('Verify payment:', verifyState)
+          const verifyStr = JSON.stringify(verifyState)
+          console.log('verify-payment raw:', verifyStr)
+          addLog('DEBUG verify: ' + verifyStr.substring(0, 200))
 
-          if (verifyState.value?.active?.value === true) {
-            setChannelState(verifyState.value)
-            addLog(`Channel ACTIVE - Balance: ${verifyState.value.remaining?.value || 'N/A'} µSTX`)
+          // Parse active and remaining from the nested structure
+          // cvToJSON can nest values differently, so search recursively
+          const activeCV = findInCV(verifyState, 'active')
+          const remainingCV = findInCV(verifyState, 'remaining')
+
+          const isActive = activeCV === true || activeCV?.value === true
+          const remaining = remainingCV?.value ?? remainingCV ?? '0'
+
+          if (isActive) {
+            setChannelState({ active: { value: true }, remaining: { value: remaining } })
+            addLog(`Channel ACTIVE - Balance: ${remaining} µSTX`)
           } else {
             setChannelState({ active: { value: false }, exists: true })
-            addLog(`Channel EXISTS but balance depleted (0 µSTX remaining). Close it to open a new one.`)
+            addLog(`Channel EXISTS but balance depleted (${remaining} µSTX). Close to open new one.`)
           }
         } catch (verifyError: any) {
-          // Channel exists but verify failed - still show close button
           setChannelState({ active: { value: false }, exists: true })
-          addLog('Channel exists but could not verify balance. You can close it.')
+          addLog('Channel exists but verify error: ' + verifyError.message)
         }
       } else {
-        // Channel doesn't exist
         setChannelExists(false)
         setChannelState({ active: { value: false } })
         addLog('No channel found. You can open a new one.')
       }
     } catch (error: any) {
       console.error('Error checking channel:', error)
-      // If get-channel-info throws, channel doesn't exist
       setChannelExists(false)
       setChannelState({ active: { value: false } })
       addLog('No channel found. You can open a new one.')
     }
-  }, [stxAddress, addLog])
+  }, [stxAddress, addLog, findInCV])
 
   const openChannel = async () => {
     if (!stxAddress) return
