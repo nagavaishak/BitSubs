@@ -108,7 +108,8 @@ export default function RealWalletDemo() {
           uintCV(1000000),
           uintCV(100)
         ],
-        network: 'testnet' as const
+        network: 'testnet' as const,
+        postConditionMode: 'allow' as const
       }
 
       const response = await request('stx_callContract', txParams)
