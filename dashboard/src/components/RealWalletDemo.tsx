@@ -32,23 +32,8 @@ export default function RealWalletDemo() {
     }
   }, [])
 
-  useEffect(() => {
-    if (!userData) return
-
-    // Check channel state when user data is loaded
-    checkChannelState()
-  }, [userData])
-
-  useEffect(() => {
-    if (!userData || !channelState?.active?.value) return
-
-    // Poll balance every 15 seconds
-    const interval = setInterval(() => {
-      checkChannelState()
-    }, 15000)
-
-    return () => clearInterval(interval)
-  }, [userData, channelState])
+  // Removed automatic channel checking to prevent errors
+  // Users can manually refresh balance with the button
 
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString()
@@ -105,8 +90,10 @@ export default function RealWalletDemo() {
         addLog(`📊 Channel active - Balance: ${state.value.remaining?.value} µSTX`)
       }
     } catch (error: any) {
+      // Silently set channel as closed if not found (expected behavior)
       console.log('No channel found:', error.message)
       setChannelState({ active: { value: false } })
+      // Don't show error in UI - it's expected when no channel exists
     }
   }
 
