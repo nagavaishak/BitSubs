@@ -8,6 +8,7 @@ import PaymentFlow from './components/PaymentFlow'
 import StatsCards from './components/StatsCards'
 import BlockchainInfo from './components/BlockchainInfo'
 import Docs from './components/Docs'
+import RealWalletDemo from './components/RealWalletDemo'
 
 interface DemoState {
   isRunning: boolean
@@ -35,6 +36,7 @@ interface DemoState {
 
 function App() {
   const [currentPage, setCurrentPage] = useState<'demo' | 'docs'>('demo')
+  const [demoMode, setDemoMode] = useState<'quick' | 'wallet'>('quick')
   const [demoState, setDemoState] = useState<DemoState>({
     isRunning: false,
     channelStatus: 'closed',
@@ -492,20 +494,66 @@ function App() {
           <h2 className="section-title">
             <span className="title-number">[03]</span> LIVE DEMO
           </h2>
-          <p className="demo-subtitle">
-            Watch 1000 x402-verified requests stream through a single payment channel
-          </p>
-          <button
-            className="demo-button"
-            onClick={startDemo}
-            disabled={demoState.isRunning}
-          >
-            <span className="btn-bracket">[</span>
-            {demoState.isRunning ? 'RUNNING...' : 'START DEMO'}
-            <span className="btn-bracket">]</span>
-          </button>
+
+          {/* Demo Mode Toggle */}
+          <div style={{
+            display: 'flex',
+            gap: '1rem',
+            justifyContent: 'center',
+            marginBottom: '1.5rem',
+            flexWrap: 'wrap'
+          }}>
+            <button
+              onClick={() => setDemoMode('quick')}
+              style={{
+                background: demoMode === 'quick' ? 'var(--stacks-orange)' : 'transparent',
+                color: demoMode === 'quick' ? '#000' : 'var(--stacks-orange)',
+                border: '2px solid var(--stacks-orange)',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '4px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '0.9rem'
+              }}
+            >
+              ⚡ Quick Demo (30s)
+            </button>
+            <button
+              onClick={() => setDemoMode('wallet')}
+              style={{
+                background: demoMode === 'wallet' ? 'var(--stacks-orange)' : 'transparent',
+                color: demoMode === 'wallet' ? '#000' : 'var(--stacks-orange)',
+                border: '2px solid var(--stacks-orange)',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '4px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '0.9rem'
+              }}
+            >
+              💼 Real Wallet Demo
+            </button>
+          </div>
+
+          {demoMode === 'quick' && (
+            <>
+              <p className="demo-subtitle">
+                Watch 1000 x402-verified requests stream through a single payment channel
+              </p>
+              <button
+                className="demo-button"
+                onClick={startDemo}
+                disabled={demoState.isRunning}
+              >
+                <span className="btn-bracket">[</span>
+                {demoState.isRunning ? 'RUNNING...' : 'START DEMO'}
+                <span className="btn-bracket">]</span>
+              </button>
+            </>
+          )}
         </div>
 
+        {demoMode === 'quick' ? (
         <div className="dashboard-grid">
           {/* Channel Status & Balance */}
           <div className="grid-row-2">
@@ -577,6 +625,9 @@ function App() {
             </motion.div>
           </div>
         </div>
+        ) : (
+          <RealWalletDemo />
+        )}
       </section>
 
       {/* Footer */}
