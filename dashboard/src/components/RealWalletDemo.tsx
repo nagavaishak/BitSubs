@@ -20,7 +20,14 @@ export default function RealWalletDemo() {
     if (isConnected()) {
       try {
         const stored = localStorage.getItem('stx_address')
-        if (stored) setStxAddress(stored)
+        // Validate it's a Stacks address (starts with S)
+        if (stored && (stored.startsWith('ST') || stored.startsWith('SP'))) {
+          setStxAddress(stored)
+        } else {
+          // Clear invalid address (Bitcoin address was cached)
+          localStorage.removeItem('stx_address')
+          addLog('Please reconnect wallet - invalid address cleared')
+        }
       } catch (_) {}
     }
   }, [])
