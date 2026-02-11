@@ -82,6 +82,33 @@ app.get('/info', (req, res) => {
   });
 });
 
+// Demo signing endpoint (for interactive demo)
+app.post('/api/demo/sign', (req, res) => {
+  try {
+    const { resource } = req.body;
+
+    if (!resource) {
+      return res.status(400).json({ error: 'resource required' });
+    }
+
+    // Demo wallet address (pre-configured with open channel)
+    const DEMO_ADDRESS = process.env.DEMO_WALLET_ADDRESS || 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP';
+
+    const message = JSON.stringify({
+      domain: 'x402-subscription',
+      resource,
+      purpose: 'subscription-access'
+    });
+
+    // Simple signature for demo (base64 encoded message)
+    const signature = Buffer.from(message).toString('base64');
+
+    res.json({ signature, address: DEMO_ADDRESS });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 BitSubs Premium API running on http://localhost:${PORT}`);

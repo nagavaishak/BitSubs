@@ -1,7 +1,7 @@
 interface Request {
   id: number
   endpoint: string
-  status: number
+  status: number | 'pending' | 'success' | 'error'
   timestamp: number
 }
 
@@ -14,8 +14,8 @@ export default function RequestFeed({ requests }: Props) {
     <div style={{ height: '500px', overflowY: 'auto' }}>
       {requests.map((req) => (
         <div key={req.id} className="request-item">
-          <span className={`request-status ${req.status === 200 ? 'success' : 'error'}`}>
-            {req.status}
+          <span className={`request-status ${req.status === 200 || req.status === 'success' ? 'success' : req.status === 'pending' ? 'pending' : 'error'}`}>
+            {typeof req.status === 'number' ? req.status : req.status.toUpperCase()}
           </span>
           <span className="request-endpoint">
             {req.endpoint}

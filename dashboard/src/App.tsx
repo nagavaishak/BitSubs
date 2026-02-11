@@ -17,7 +17,7 @@ interface DemoState {
   requests: Array<{
     id: number
     endpoint: string
-    status: number
+    status: 'pending' | 'success' | 'error' | number
     timestamp: number
   }>
   stats: {
@@ -55,90 +55,87 @@ function App() {
   })
 
   const startDemo = async () => {
-    setDemoState(prev => ({ ...prev, isRunning: true, channelStatus: 'opening' }))
+    setDemoState(prev => ({ ...prev, isRunning: true, channelStatus: 'opening', requests: [] }))
 
-    setTimeout(() => {
-      setDemoState(prev => ({
-        ...prev,
-        channelStatus: 'active',
-        balance: prev.totalDeposit,
-        stats: { ...prev.stats, onChainTxs: 1 },
-        blockchain: {
-          ...prev.blockchain,
-          txId: '0x6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743'
-        }
-      }))
-      startRequestSimulation()
-    }, 2000)
-  }
+    try {
+      const API_URL = 'https://bitsubs-production.up.railway.app'
 
-  const startRequestSimulation = () => {
-    let requestCount = 0
-    const interval = setInterval(() => {
-      if (requestCount >= 1000) {
-        clearInterval(interval)
-        closeChannel()
-        return
-      }
+      // Step 1: Request without payment proof → 402
+      addRequest('Initial request (no payment proof)', 'pending')
+      const r1 = await fetch(`${API_URL}/api/premium/weather`)
 
-      const endpoints = ['/api/premium/weather', '/api/premium/market-data', '/api/premium/news']
-      const endpoint = endpoints[requestCount % 3]
+      if (r1.status === 402) {
+        addRequest('402 Payment Required received', 'success')
+        await sleep(1000)
 
-      setDemoState(prev => {
-        const newBalance = prev.balance - 100
-        const status = newBalance > 0 ? 200 : 402
-
-        const newRequest = {
-          id: requestCount,
-          endpoint,
-          status,
-          timestamp: Date.now()
-        }
-
-        const newRequests = [newRequest, ...prev.requests].slice(0, 50)
-
-        const newStats = {
-          totalRequests: prev.stats.totalRequests + 1,
-          successfulRequests: status === 200 ? prev.stats.successfulRequests + 1 : prev.stats.successfulRequests,
-          onChainTxs: prev.stats.onChainTxs,
-          gasSavings: ((1 - (2 / (prev.stats.totalRequests + 1))) * 100)
-        }
-
-        if (newBalance <= 0) {
-          clearInterval(interval)
-          setTimeout(() => closeChannel(), 1000)
-          return {
-            ...prev,
-            balance: 0,
-            channelStatus: 'expired',
-            requests: newRequests,
-            stats: newStats
-          }
-        }
-
-        return {
+        // Step 2: Channel pre-opened
+        setDemoState(prev => ({
           ...prev,
-          balance: newBalance,
-          requests: newRequests,
-          stats: newStats
+          channelStatus: 'active',
+          balance: prev.totalDeposit,
+          stats: { ...prev.stats, onChainTxs: 1 }
+        }))
+        addRequest('Channel already open (demo wallet)', 'success')
+        await sleep(1000)
+
+        // Step 3: Generate signature
+        addRequest('Generating payment proof signature...', 'pending')
+        const sigRes = await fetch(`${API_URL}/api/demo/sign`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resource: '/api/premium/weather' })
+        })
+        const { signature, address } = await sigRes.json()
+        addRequest(`Signature generated for ${address.slice(0, 10)}...`, 'success')
+        await sleep(1000)
+
+        // Step 4: Retry with payment proof → 200
+        addRequest('Retrying with payment proof headers...', 'pending')
+        const r2 = await fetch(`${API_URL}/api/premium/weather`, {
+          headers: {
+            'x-payment-proof': signature,
+            'x-stacks-address': address
+          }
+        })
+
+        if (r2.status === 200) {
+          const data = await r2.json()
+          addRequest('✅ Access granted - 200 OK', 'success')
+          addRequest(`Weather data: ${data.temperature}°F ${data.condition}`, 'success')
+
+          setDemoState(prev => ({
+            ...prev,
+            stats: {
+              ...prev.stats,
+              totalRequests: 1,
+              successfulRequests: 1,
+              gasSavings: 99.8
+            }
+          }))
+        } else {
+          addRequest(`❌ Verification failed: ${r2.status}`, 'error')
         }
-      })
-
-      requestCount++
-    }, 30)
+      }
+    } catch (error: any) {
+      addRequest(`❌ Error: ${error.message}`, 'error')
+    } finally {
+      setDemoState(prev => ({ ...prev, isRunning: false }))
+    }
   }
 
-  const closeChannel = () => {
-    setDemoState(prev => ({ ...prev, channelStatus: 'closing' }))
-    setTimeout(() => {
-      setDemoState(prev => ({
-        ...prev,
-        channelStatus: 'closed',
-        isRunning: false,
-        stats: { ...prev.stats, onChainTxs: 2 }
-      }))
-    }, 2000)
+  const addRequest = (message: string, status: 'pending' | 'success' | 'error') => {
+    setDemoState(prev => ({
+      ...prev,
+      requests: [...prev.requests, {
+        id: Date.now(),
+        endpoint: message,
+        status,
+        timestamp: Date.now()
+      }]
+    }))
   }
+
+  const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
   return (
     <div className="app-container">
