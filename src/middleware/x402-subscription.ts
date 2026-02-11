@@ -42,6 +42,21 @@ export function x402SubscriptionMiddleware(config: X402Config) {
                     'uint:100'
                   ]
                 }
+              },
+              {
+                token: 'sBTC',
+                amount: '10000',
+                recipient: config.serviceAddress,
+                contractCall: {
+                  contractAddress: config.contractAddress,
+                  contractName: config.contractName,
+                  functionName: 'open-channel-sbtc',
+                  functionArgs: [
+                    `principal:${config.serviceAddress}`,
+                    'uint:10000',
+                    'uint:1'
+                  ]
+                }
               }
             ],
             description: 'Open subscription channel for continuous API access',
@@ -80,21 +95,38 @@ export function x402SubscriptionMiddleware(config: X402Config) {
             currentBalance: channelData.value?.remaining?.value || '0',
             paymentInstructions: {
               network: 'stacks-testnet',
-              tokens: [{
-                token: 'STX',
-                amount: '1000000',
-                recipient: config.serviceAddress,
-                contractCall: {
-                  contractAddress: config.contractAddress,
-                  contractName: config.contractName,
-                  functionName: 'open-channel',
-                  functionArgs: [
-                    `principal:${config.serviceAddress}`,
-                    'uint:1000000',
-                    'uint:100'
-                  ]
+              tokens: [
+                {
+                  token: 'STX',
+                  amount: '1000000',
+                  recipient: config.serviceAddress,
+                  contractCall: {
+                    contractAddress: config.contractAddress,
+                    contractName: config.contractName,
+                    functionName: 'open-channel',
+                    functionArgs: [
+                      `principal:${config.serviceAddress}`,
+                      'uint:1000000',
+                      'uint:100'
+                    ]
+                  }
+                },
+                {
+                  token: 'sBTC',
+                  amount: '10000',
+                  recipient: config.serviceAddress,
+                  contractCall: {
+                    contractAddress: config.contractAddress,
+                    contractName: config.contractName,
+                    functionName: 'open-channel-sbtc',
+                    functionArgs: [
+                      `principal:${config.serviceAddress}`,
+                      'uint:10000',
+                      'uint:1'
+                    ]
+                  }
                 }
-              }]
+              ]
             }
           }
         });

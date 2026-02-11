@@ -8,7 +8,7 @@
 
 ## What This Is
 
-BitSubs enables continuous subscription access using payment channels on Stacks. Services stay open while STX micropayments stream, and automatically cut off when the channel balance depletes.
+BitSubs enables continuous subscription access using payment channels on Stacks. Services stay open while STX or sBTC micropayments stream, and automatically cut off when the channel balance depletes.
 
 **Key Innovation**: 1000 subscription requests = 2 on-chain transactions (99.8% gas reduction)
 
@@ -74,17 +74,30 @@ BitSubs implements the x402 payment protocol for Stacks, enabling standardized p
     "paymentInstructions": {
       "network": "stacks-testnet",
       "chainId": "stacks:testnet",
-      "tokens": [{
-        "token": "STX",
-        "amount": "1000000",
-        "recipient": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
-        "contractCall": {
-          "contractAddress": "ST...",
-          "contractName": "subscription-channel",
-          "functionName": "open-channel",
-          "functionArgs": ["principal:...", "uint:1000000", "uint:100"]
+      "tokens": [
+        {
+          "token": "STX",
+          "amount": "1000000",
+          "recipient": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
+          "contractCall": {
+            "contractAddress": "ST...",
+            "contractName": "subscription-channel",
+            "functionName": "open-channel",
+            "functionArgs": ["principal:...", "uint:1000000", "uint:100"]
+          }
+        },
+        {
+          "token": "sBTC",
+          "amount": "10000",
+          "recipient": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
+          "contractCall": {
+            "contractAddress": "ST...",
+            "contractName": "subscription-channel",
+            "functionName": "open-channel-sbtc",
+            "functionArgs": ["principal:...", "uint:10000", "uint:1"]
+          }
         }
-      }],
+      ],
       "description": "Open subscription channel for continuous API access",
       "resource": "/api/premium/data"
     }

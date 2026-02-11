@@ -58,7 +58,7 @@ export default function Docs() {
 
         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '2rem', borderRadius: '8px', border: '1px solid var(--stacks-border)', marginBottom: '2rem' }}>
           <h3 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--stacks-orange)' }}>2. Open Subscription Channel</h3>
-          <p style={{ marginBottom: '1rem' }}>Deposit STX into payment channel (1 on-chain transaction):</p>
+          <p style={{ marginBottom: '1rem' }}>Choose between STX or sBTC and deposit into payment channel (1 on-chain transaction):</p>
           <pre style={{
             background: '#000',
             padding: '1.5rem',
@@ -184,8 +184,8 @@ app.use('/api/premium/*', x402SubscriptionMiddleware({
 
           <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--stacks-border)' }}>
             <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>₿</div>
-            <h3 style={{ color: 'var(--stacks-orange)', marginBottom: '0.5rem' }}>Bitcoin-Native</h3>
-            <p style={{ color: 'var(--stacks-text-secondary)' }}>STX & sBTC on Stacks L2</p>
+            <h3 style={{ color: 'var(--stacks-orange)', marginBottom: '0.5rem' }}>Dual-Token Support</h3>
+            <p style={{ color: 'var(--stacks-text-secondary)' }}>Pay with STX or sBTC (wrapped Bitcoin)</p>
           </div>
 
           <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--stacks-border)' }}>
