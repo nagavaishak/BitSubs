@@ -27,10 +27,17 @@ export default function RealWalletDemo() {
 
   useEffect(() => {
     if (userSession.isUserSignedIn()) {
-      setUserData(userSession.loadUserData())
-      checkChannelState()
+      const data = userSession.loadUserData()
+      setUserData(data)
     }
   }, [])
+
+  useEffect(() => {
+    if (!userData) return
+
+    // Check channel state when user data is loaded
+    checkChannelState()
+  }, [userData])
 
   useEffect(() => {
     if (!userData || !channelState?.active?.value) return
