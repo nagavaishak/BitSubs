@@ -13,6 +13,7 @@ export default function RealWalletDemo() {
   const [channelState, setChannelState] = useState<any>(null)
   const [logs, setLogs] = useState<string[]>([])
   const [isOpening, setIsOpening] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   const [requestCount, setRequestCount] = useState(0)
 
   useEffect(() => {
@@ -133,6 +134,38 @@ export default function RealWalletDemo() {
     } catch (error: any) {
       addLog('Error: ' + (error.message || String(error)))
       setIsOpening(false)
+    }
+  }
+
+  const closeChannel = async () => {
+    if (!stxAddress) return
+    setIsClosing(true)
+
+    try {
+      addLog('Closing channel and withdrawing balance...')
+
+      const txParams = {
+        contract: `${CONTRACT_ADDRESS}.${CONTRACT_NAME}` as `${string}.${string}`,
+        functionName: 'close-channel',
+        functionArgs: [
+          principalCV(SERVICE_ADDRESS)
+        ],
+        network: 'testnet' as const,
+        postConditionMode: 'allow' as const
+      }
+
+      const response = await request('stx_callContract', txParams)
+
+      if (response.txid) {
+        addLog('Close transaction submitted! TX: ' + response.txid)
+        addLog('View: https://explorer.hiro.so/txid/' + response.txid + '?chain=testnet')
+        addLog('Channel will close and balance will be refunded (~5-10 min)...')
+        setChannelState({ active: { value: false } })
+      }
+      setIsClosing(false)
+    } catch (error: any) {
+      addLog('Error closing channel: ' + (error.message || String(error)))
+      setIsClosing(false)
     }
   }
 
@@ -357,23 +390,42 @@ export default function RealWalletDemo() {
 
             {channelState?.active?.value && (
               <div>
-                <button
-                  onClick={makeRequest}
-                  style={{
-                    background: '#4287f5',
-                    color: '#fff',
-                    padding: '1rem 2rem',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Make x402 Request
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <button
+                    onClick={makeRequest}
+                    style={{
+                      background: '#4287f5',
+                      color: '#fff',
+                      padding: '1rem 2rem',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Make x402 Request
+                  </button>
+                  <button
+                    onClick={closeChannel}
+                    disabled={isClosing}
+                    style={{
+                      background: 'transparent',
+                      color: '#f55',
+                      padding: '1rem 2rem',
+                      border: '2px solid #f55',
+                      borderRadius: '4px',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      cursor: isClosing ? 'not-allowed' : 'pointer',
+                      opacity: isClosing ? 0.5 : 1
+                    }}
+                  >
+                    {isClosing ? 'Closing...' : 'Close Channel'}
+                  </button>
+                </div>
                 <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--stacks-text-secondary)' }}>
-                  Each request verifies your channel balance and returns weather data
+                  Each request verifies your channel balance and returns weather data. Close channel to withdraw remaining balance.
                 </p>
               </div>
             )}
