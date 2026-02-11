@@ -35,11 +35,15 @@ export default function RealWalletDemo() {
       const response = await connect()
       const addresses = response.addresses
       if (addresses && addresses.length > 0) {
-        // Use the first address available
-        const addr = addresses[0].address
-        setStxAddress(addr)
-        localStorage.setItem('stx_address', addr)
-        addLog('Wallet connected: ' + addr)
+        // Find the Stacks address (starts with ST for testnet or SP for mainnet)
+        const stxAddr = addresses.find(a => a.address.startsWith('ST') || a.address.startsWith('SP'))
+        if (stxAddr) {
+          setStxAddress(stxAddr.address)
+          localStorage.setItem('stx_address', stxAddr.address)
+          addLog('Wallet connected: ' + stxAddr.address)
+        } else {
+          addLog('Error: No Stacks address found in wallet')
+        }
       }
     } catch (error: any) {
       console.error('Connect error:', error)
