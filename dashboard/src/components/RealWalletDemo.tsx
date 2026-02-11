@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { connect, disconnect as disconnectWallet, isConnected, request } from '@stacks/connect'
+import { principalCV, uintCV } from '@stacks/transactions'
 
 const CONTRACT_ADDRESS = 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP'
 const CONTRACT_NAME = 'subscription-channel-v2'
@@ -99,16 +100,18 @@ export default function RealWalletDemo() {
       addLog('Opening subscription channel...')
       addLog('Deposit: 1 STX | Rate: 100 uSTX per block')
 
-      const response = await request('stx_callContract', {
+      const txParams = {
         contract: `${CONTRACT_ADDRESS}.${CONTRACT_NAME}` as `${string}.${string}`,
         functionName: 'open-channel',
         functionArgs: [
-          `'${SERVICE_ADDRESS}`,
-          'u1000000',
-          'u100'
+          principalCV(SERVICE_ADDRESS),
+          uintCV(1000000),
+          uintCV(100)
         ],
-        network: 'testnet'
-      })
+        network: 'testnet' as const
+      }
+
+      const response = await request('stx_callContract', txParams)
 
       if (response.txid) {
         addLog('Transaction submitted! TX: ' + response.txid)
