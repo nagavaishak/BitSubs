@@ -128,9 +128,48 @@ export default function RealWalletDemo() {
       if (response.txid) {
         addLog('Transaction submitted! TX: ' + response.txid)
         addLog('View: https://explorer.hiro.so/txid/' + response.txid + '?chain=testnet')
-        addLog('Waiting for confirmation (~5-10 min)...')
+        addLog('Checking transaction status...')
+
+        // Poll for transaction result to detect ERR-CHANNEL-EXISTS
+        let attempts = 0
+        const pollInterval = setInterval(async () => {
+          attempts++
+          try {
+            const txResponse = await fetch(`https://api.testnet.hiro.so/extended/v1/tx/0x${response.txid}`)
+            if (txResponse.ok) {
+              const txData = await txResponse.json()
+              if (txData.tx_status === 'abort_by_response') {
+                clearInterval(pollInterval)
+                const errorCode = txData.tx_result?.repr
+                if (errorCode?.includes('u409')) {
+                  addLog('ERROR: Channel already exists! Checking existing channel...')
+                  await checkChannelState()
+                  addLog('Please close the existing channel first using the button below')
+                } else {
+                  addLog('Transaction failed: ' + errorCode)
+                }
+                setIsOpening(false)
+              } else if (txData.tx_status === 'success') {
+                clearInterval(pollInterval)
+                addLog('Channel opened successfully!')
+                await checkChannelState()
+                setIsOpening(false)
+              }
+            }
+          } catch (e) {
+            // Continue polling
+          }
+
+          // Stop polling after 2 minutes
+          if (attempts >= 24) {
+            clearInterval(pollInterval)
+            addLog('Taking longer than expected. Click Refresh Balance to check status.')
+            setIsOpening(false)
+          }
+        }, 5000) // Poll every 5 seconds
+      } else {
+        setIsOpening(false)
       }
-      setIsOpening(false)
     } catch (error: any) {
       addLog('Error: ' + (error.message || String(error)))
       setIsOpening(false)
@@ -365,25 +404,42 @@ export default function RealWalletDemo() {
 
             {!channelState?.active?.value && (
               <div>
-                <button
-                  onClick={openChannel}
-                  disabled={isOpening}
-                  style={{
-                    background: isOpening ? '#666' : 'var(--stacks-orange)',
-                    color: '#000',
-                    padding: '1rem 2rem',
-                    border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '1rem',
-                    fontWeight: 'bold',
-                    cursor: isOpening ? 'not-allowed' : 'pointer',
-                    opacity: isOpening ? 0.5 : 1
-                  }}
-                >
-                  {isOpening ? 'Opening Channel...' : 'Open Subscription Channel'}
-                </button>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <button
+                    onClick={openChannel}
+                    disabled={isOpening}
+                    style={{
+                      background: isOpening ? '#666' : 'var(--stacks-orange)',
+                      color: '#000',
+                      padding: '1rem 2rem',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      cursor: isOpening ? 'not-allowed' : 'pointer',
+                      opacity: isOpening ? 0.5 : 1
+                    }}
+                  >
+                    {isOpening ? 'Opening Channel...' : 'Open Subscription Channel'}
+                  </button>
+                  <button
+                    onClick={checkChannelState}
+                    style={{
+                      background: 'transparent',
+                      color: '#4287f5',
+                      padding: '1rem 2rem',
+                      border: '2px solid #4287f5',
+                      borderRadius: '4px',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Check for Existing Channel
+                  </button>
+                </div>
                 <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--stacks-text-secondary)' }}>
-                  Cost: 1 STX deposit | Rate: 100 uSTX per block | Wallet will prompt for signature
+                  Cost: 1 STX deposit | Rate: 100 uSTX per block | If opening fails, check for existing channel first
                 </p>
               </div>
             )}
