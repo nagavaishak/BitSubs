@@ -1,7 +1,7 @@
 # BitSubs Project Status
 
-**Date**: February 9, 2026
-**Status**: ✅ Days 1-4 Complete, Documentation Done
+**Date**: February 11, 2026
+**Status**: ✅ Days 1-6 Complete, Production Deployment In Progress
 
 ---
 
@@ -69,6 +69,30 @@
 - [x] Code comments added
 - [x] Project status documentation
 
+### Day 6: Testnet Deployment ✅
+- [x] Contract deployed to Stacks testnet
+  - Contract Address: `STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel`
+  - Explorer: https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet
+- [x] x402 middleware updated to full protocol compliance
+  - Proper x402 schema in 402 responses
+  - Payment proof signature verification
+  - x-payment-proof and x-stacks-address headers
+- [x] Technical brutalist dashboard created
+  - React + Vite + Framer Motion
+  - Interactive demo visualization
+  - Real-time subscription simulation
+  - Stacks.co inspired design
+- [x] Dashboard deployed to Vercel
+  - **Live URL**: https://bitsubs.vercel.app
+  - Auto-deployed via Vercel CLI
+  - Production build optimized
+- [x] API prepared for production deployment
+  - Added `start` script for production
+  - Health check endpoint at `/health`
+  - Root endpoint with service info
+  - Environment variables configured
+  - Build tested and working
+
 ---
 
 ## 📊 Test Results
@@ -108,22 +132,31 @@ BitSubs/
 │   └── package.json
 ├── src/
 │   ├── middleware/
-│   │   └── x402-subscription.ts      # 58 lines - Express middleware
+│   │   └── x402-subscription.ts      # x402-compliant Express middleware
 │   ├── client/
-│   │   └── subscription-client.ts    # 151 lines - TypeScript SDK
+│   │   └── subscription-client.ts    # TypeScript SDK
 │   └── demo/
-│       ├── premium-api.ts            # 87 lines - Protected API demo
-│       └── agent.ts                  # 174 lines - Terminal demo
+│       ├── premium-api.ts            # Protected API demo
+│       └── agent.ts                  # Terminal demo
+├── dashboard/                        # React + Vite landing page
+│   ├── src/
+│   │   ├── App.tsx                   # Main dashboard component
+│   │   ├── App.css                   # Technical brutalist styling
+│   │   └── components/               # Interactive demo components
+│   ├── package.json
+│   └── vite.config.ts
 ├── dist/                             # Compiled JavaScript
-├── README.md                         # 379 lines - Documentation
+├── README.md                         # Documentation
 ├── PROJECT_STATUS.md                 # This file
+├── DEMO_GUIDE.md                     # Video demo guide
+├── DEMO_STORYBOARD.md                # Demo storyboard
 ├── .gitignore
 ├── .env.example
 ├── package.json
 └── tsconfig.json
 ```
 
-**Total Lines of Code**: ~1,408 lines
+**Total Lines of Code**: ~2,000+ lines
 
 ---
 
@@ -158,41 +191,49 @@ BitSubs/
 
 ---
 
-## 🚀 Next Steps (Days 6-7)
+## 🚀 Next Steps (Day 7)
 
-### Immediate Actions
-1. Deploy contract to Stacks testnet
-   ```bash
-   cd bitsubs
-   clarinet integrate
-   clarinet deployments apply -p testnet
-   ```
+### In Progress
+- [x] Deploy contract to Stacks testnet ✅
+- [x] Dashboard deployed to Vercel ✅
+- [ ] 🔄 Deploy API to Railway (in progress)
+  - Railway CLI installed
+  - Need to complete authentication
+  - Will deploy to production URL
 
-2. Update environment variables
-   ```bash
-   cp .env.example .env
-   # Edit .env with actual contract address
-   ```
+### Remaining Tasks
+1. **Complete API Deployment** (30 min)
+   - Finish Railway login
+   - Deploy API with `railway up`
+   - Set environment variables in Railway dashboard
+   - Test live API endpoints
 
-3. Test E2E flow
-   ```bash
-   # Terminal 1: Start API server
-   npm run server
+2. **Polish README** (1 hour)
+   - Update with live deployment URLs
+   - Add Vercel dashboard link
+   - Add Railway API link
+   - Update all "yourusername" placeholders
+   - Production-quality badges and links
 
-   # Terminal 2: Run demo
-   npm run demo
-   ```
+3. **Test sBTC Support** (optional, 2 hours)
+   - Check if sBTC testnet is stable
+   - If yes: Add sBTC channel functions
+   - If no: Document as pending feature
 
-### Day 6: Video & Submission
-- [ ] Record 5-minute demo video
-- [ ] Create architecture diagrams
-- [ ] Polish README
-- [ ] Push to GitHub (public repo)
-- [ ] Submit to x402 challenge
+4. **Final Integration** (30 min)
+   - Update all cross-links
+   - Dashboard → GitHub
+   - Dashboard → Live API
+   - README → Both deployments
+   - API root endpoint → Dashboard
+
+5. **Video & Submission** (Day 7)
+   - Record 5-minute demo video
+   - Submit to x402 Stacks challenge
+   - GitHub repo already public
 
 ### Optional Enhancements (if time permits)
-- [ ] sBTC token support
-- [ ] Dashboard UI
+- [ ] sBTC token support (conditional on testnet stability)
 - [ ] Multi-token support (USDC)
 - [ ] Mainnet deployment
 - [ ] Production security audit
@@ -201,19 +242,21 @@ BitSubs/
 
 ## 🏆 Success Criteria (from guide)
 
-### Must-Have ✅
-- [x] Clarity contract deployed to testnet (ready)
-- [x] `open-channel`, `verify-payment`, `close-channel` all working
-- [x] x402 middleware returns 402 correctly
-- [x] Terminal agent demo makes 1000 requests (implemented)
-- [x] README with clear documentation
-- [ ] 5-minute video demo (Day 6)
-- [ ] GitHub repository public (Day 6)
+### Must-Have
+- [x] Clarity contract deployed to testnet ✅
+- [x] `open-channel`, `verify-payment`, `close-channel` all working ✅
+- [x] x402 middleware returns 402 correctly ✅
+- [x] Terminal agent demo makes 1000 requests ✅
+- [x] README with clear documentation ✅
+- [x] Dashboard UI deployed ✅ (https://bitsubs.vercel.app)
+- [x] GitHub repository public ✅
+- [ ] 5-minute video demo (Day 7)
+- [ ] Live API deployed (in progress - Railway)
 
 ### Nice-to-Have
-- [ ] sBTC token support
+- [ ] sBTC token support (testing feasibility)
 - [ ] USDCx token support
-- [ ] Dashboard UI
+- [x] Dashboard UI ✅
 - [ ] Force-close tested on mainnet
 
 ---
@@ -231,19 +274,41 @@ BitSubs/
 
 ---
 
-## 🎉 Summary
+## 🌐 Live Deployments
 
-**BitSubs** is ready for testnet deployment and demonstration. The core functionality is complete, tested, and documented. The project demonstrates:
+### Production URLs
+- **Dashboard**: https://bitsubs.vercel.app ✅ LIVE
+- **API**: [Pending Railway deployment] 🔄
+- **Contract**: `STDJM59BQ5320FM808QWEVP4JXH0R9BYS4Q0YE6C.subscription-channel` ✅
+- **Explorer**: https://explorer.hiro.so/txid/6dcf04602d18d9208c44bb5b83052af232089e469cf0b116d67fd77e744a2743?chain=testnet
 
-- Novel subscription mechanism on Bitcoin/Stacks
-- Extreme gas efficiency (99.8% reduction)
-- Production-ready code quality
-- Comprehensive testing
-- Clear documentation
-- E2E demo capability
-
-**Next milestone**: Deploy to testnet, record demo video, and submit to x402 challenge.
+### Deployment Status
+- ✅ Stacks Testnet Contract: DEPLOYED
+- ✅ Vercel Dashboard: DEPLOYED
+- 🔄 Railway API: IN PROGRESS
+- ⏳ README Polish: PENDING
+- ⏳ Video Demo: PENDING
 
 ---
 
-*Last updated: February 9, 2026*
+## 🎉 Summary
+
+**BitSubs** is 90% ready for hackathon submission. The core functionality is complete, tested, documented, and partially deployed. The project demonstrates:
+
+- ✅ Novel subscription mechanism on Bitcoin/Stacks
+- ✅ Extreme gas efficiency (99.8% reduction)
+- ✅ Production-ready code quality
+- ✅ Comprehensive testing (13/13 passing)
+- ✅ Clear documentation
+- ✅ Interactive dashboard deployed
+- ✅ x402 protocol compliance
+- ✅ E2E demo capability
+- 🔄 Live API deployment (in progress)
+
+**Remaining work**: Complete Railway API deployment (~30 min), polish README with live URLs (1 hour), record demo video (Day 7).
+
+**Hackathon readiness**: 90% complete, on track for submission.
+
+---
+
+*Last updated: February 11, 2026 - 2:00 PM*

@@ -191,7 +191,7 @@ clear
 ## Post-Production Checklist
 
 - [ ] Add title card at start (optional)
-- [ ] Add "GitHub: github.com/yourusername/bitsubs" overlay at end
+- [ ] Add "GitHub: github.com/nagavaishak/BitSubs" overlay at end
 - [ ] Verify all text is readable at 1080p
 - [ ] Check audio levels (consistent volume)
 - [ ] Add chapter markers (optional):

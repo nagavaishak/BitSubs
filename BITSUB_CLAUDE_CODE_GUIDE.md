@@ -861,7 +861,7 @@ MIT
 git init
 git add .
 git commit -m "BitSub: Bitcoin Subscriptions via x402"
-git remote add origin https://github.com/yourusername/bitsub
+git remote add origin https://github.com/nagavaishak/BitSubs
 git push -u origin main
 ```
 
