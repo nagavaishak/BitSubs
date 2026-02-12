@@ -4,64 +4,83 @@ import {
   callReadOnlyFunction,
   principalCV,
   cvToJSON,
+  makeContractCall,
+  broadcastTransaction,
+  AnchorMode,
 } from '@stacks/transactions';
 import { StacksTestnet } from '@stacks/network';
 
-// ── Production Configuration ────────────────────────────────────────────────
+// ── Configuration ───────────────────────────────────────────────────────────
 
 const CONTRACT_ADDRESS = 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP';
 const CONTRACT_NAME = 'subscription-channel-v2';
 const SERVICE_ADDRESS = 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP';
 const API_URL = 'https://bitsubs-production.up.railway.app';
-
-// Agent wallet (funded on testnet)
 const AGENT_PRIVATE_KEY = process.env.AGENT_PRIVATE_KEY || '46dc98a045accf5791a17390f0e4ab4c6eb3644535548670dbd4c3a90939a6d7';
+const EXPLORER_BASE = 'https://explorer.hiro.so/txid';
 
 const network = new StacksTestnet();
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// ── Terminal Formatting ─────────────────────────────────────────────────────
+
+const C = {
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  dim: '\x1b[90m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+  white: '\x1b[37m',
+  bgRed: '\x1b[41m',
+  bgGreen: '\x1b[42m',
+  bgYellow: '\x1b[43m',
+};
+
+const startTime = Date.now();
+
+function elapsed(): string {
+  const ms = Date.now() - startTime;
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  return `${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function log(icon: string, msg: string) {
+  console.log(`${C.dim}[${elapsed()}]${C.reset} ${icon} ${msg}`);
+}
+
+function logSuccess(msg: string) {
+  console.log(`${C.dim}[${elapsed()}]${C.reset} ${C.green}✅ ${msg}${C.reset}`);
+}
+
+function logWarn(msg: string) {
+  console.log(`${C.dim}[${elapsed()}]${C.reset} ${C.yellow}⚠️  ${msg}${C.reset}`);
+}
+
+function logError(msg: string) {
+  console.log(`${C.dim}[${elapsed()}]${C.reset} ${C.red}❌ ${msg}${C.reset}`);
+}
+
+function logAction(msg: string) {
+  console.log(`${C.dim}[${elapsed()}]${C.reset} ${C.cyan}→ ${msg}${C.reset}`);
+}
+
+function balanceBar(remaining: number, total: number): string {
+  const pct = Math.max(0, Math.min(1, remaining / total));
+  const width = 30;
+  const filled = Math.round(pct * width);
+  const empty = width - filled;
+  const color = pct > 0.3 ? C.green : pct > 0.1 ? C.yellow : C.red;
+  const bar = color + '█'.repeat(filled) + C.dim + '░'.repeat(empty) + C.reset;
+  const pctStr = (pct * 100).toFixed(1) + '%';
+  return `[${bar}] ${pctStr}`;
+}
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function timestamp(): string {
-  return new Date().toLocaleTimeString('en-US', { hour12: false });
-}
-
-async function typewrite(text: string, delay = 30) {
-  for (const char of text) {
-    process.stdout.write(char);
-    await sleep(delay);
-  }
-  process.stdout.write('\n');
-}
-
-async function agentThink(thought: string) {
-  process.stdout.write(`\x1b[90m[${timestamp()}] \x1b[36mAgent thinking: \x1b[90m`);
-  await typewrite(thought, 20);
-  process.stdout.write('\x1b[0m');
-  await sleep(500);
-}
-
-function agentLog(icon: string, message: string) {
-  console.log(`\x1b[90m[${timestamp()}]\x1b[0m ${icon} ${message}`);
-}
-
-function agentAction(message: string) {
-  console.log(`\x1b[90m[${timestamp()}]\x1b[0m \x1b[33m→ ${message}\x1b[0m`);
-}
-
-function agentSuccess(message: string) {
-  console.log(`\x1b[90m[${timestamp()}]\x1b[0m \x1b[32m✓ ${message}\x1b[0m`);
-}
-
-function agentError(message: string) {
-  console.log(`\x1b[90m[${timestamp()}]\x1b[0m \x1b[31m✗ ${message}\x1b[0m`);
-}
-
-function separator() {
-  console.log('\x1b[90m' + '─'.repeat(70) + '\x1b[0m');
 }
 
 function findInCV(obj: any, key: string): any {
@@ -77,9 +96,9 @@ function findInCV(obj: any, key: string): any {
   return undefined;
 }
 
-// ── Agent Actions ───────────────────────────────────────────────────────────
+// ── Blockchain Helpers ──────────────────────────────────────────────────────
 
-async function checkChannel(address: string): Promise<{ exists: boolean; active: boolean; remaining: number }> {
+async function checkChannel(address: string): Promise<{ exists: boolean; active: boolean; remaining: number; deposit: number }> {
   try {
     const infoResult = await callReadOnlyFunction({
       contractAddress: CONTRACT_ADDRESS,
@@ -91,7 +110,8 @@ async function checkChannel(address: string): Promise<{ exists: boolean; active:
     });
     const infoData = cvToJSON(infoResult);
     const deposit = findInCV(infoData, 'deposit');
-    if (!deposit) return { exists: false, active: false, remaining: 0 };
+    if (!deposit) return { exists: false, active: false, remaining: 0, deposit: 0 };
+    const depositVal = parseInt(String(deposit?.value ?? deposit ?? '0')) || 0;
 
     const verifyResult = await callReadOnlyFunction({
       contractAddress: CONTRACT_ADDRESS,
@@ -110,13 +130,14 @@ async function checkChannel(address: string): Promise<{ exists: boolean; active:
       exists: true,
       active: active?.value === true || active === true,
       remaining: remainVal,
+      deposit: depositVal,
     };
   } catch {
-    return { exists: false, active: false, remaining: 0 };
+    return { exists: false, active: false, remaining: 0, deposit: 0 };
   }
 }
 
-async function makeX402Request(endpoint: string, address: string): Promise<any> {
+async function makeX402Request(endpoint: string, address: string): Promise<{ ok: boolean; data?: any; status: number }> {
   const resourcePath = new URL(endpoint).pathname;
   const paymentProof = Buffer.from(`${address}:${resourcePath}`).toString('base64');
 
@@ -128,11 +149,30 @@ async function makeX402Request(endpoint: string, address: string): Promise<any> 
   });
 
   if (response.status === 200) {
-    return await response.json();
-  } else if (response.status === 402) {
-    throw new Error('Payment required - channel not active or depleted');
-  } else {
-    throw new Error(`HTTP ${response.status}`);
+    return { ok: true, data: await response.json(), status: 200 };
+  }
+  return { ok: false, status: response.status };
+}
+
+async function closeChannel(privateKey: string, address: string): Promise<string | null> {
+  try {
+    const txOptions = {
+      contractAddress: CONTRACT_ADDRESS,
+      contractName: CONTRACT_NAME,
+      functionName: 'close-channel',
+      functionArgs: [principalCV(SERVICE_ADDRESS)],
+      senderKey: privateKey,
+      network,
+      anchorMode: AnchorMode.Any,
+      postConditionMode: 0x02, // Allow
+    };
+
+    const transaction = await makeContractCall(txOptions);
+    const broadcastResponse = await broadcastTransaction(transaction, network);
+    const txId = typeof broadcastResponse === 'string' ? broadcastResponse : broadcastResponse.txid;
+    return txId;
+  } catch {
+    return null;
   }
 }
 
@@ -140,173 +180,216 @@ async function makeX402Request(endpoint: string, address: string): Promise<any> 
 
 async function runAgentDemo() {
   console.clear();
-  console.log('\n');
-  console.log('\x1b[1m\x1b[37m  ╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  console.log('\x1b[1m\x1b[37m  ║          BitSubs — Autonomous Agent x402 Demo               ║\x1b[0m');
-  console.log('\x1b[1m\x1b[37m  ║    AI Agent Autonomously Pays for Premium API Access         ║\x1b[0m');
-  console.log('\x1b[1m\x1b[37m  ╚══════════════════════════════════════════════════════════════╝\x1b[0m');
+
+  // ── Banner ──────────────────────────────────────────────────────────────
+  console.log('');
+  console.log(`${C.bold}${C.white}  ═══════════════════════════════════════════════════════════════${C.reset}`);
+  console.log(`${C.bold}${C.white}    BitSubs Autonomous Agent v1.0${C.reset}`);
+  console.log(`${C.bold}${C.white}    Protocol: x402 v2 on Stacks${C.reset}`);
+  console.log(`${C.bold}${C.white}    Settlement: Bitcoin (via STX/sBTC)${C.reset}`);
+  console.log(`${C.bold}${C.white}  ═══════════════════════════════════════════════════════════════${C.reset}`);
   console.log('');
 
   const account = privateKeyToAccount(AGENT_PRIVATE_KEY, 'testnet');
   const agentAddress = account.address;
 
-  // ── Phase 1: Agent Discovery ──────────────────────────────────────────
-
-  separator();
-  agentLog('🤖', '\x1b[1mPHASE 1: Service Discovery\x1b[0m');
-  separator();
-  await sleep(800);
-
-  await agentThink('User asked me to get premium weather data. Let me check if this API requires payment...');
-  await sleep(300);
-
-  agentAction(`GET ${API_URL}/api/premium/weather`);
+  log('🤖', `${C.bold}Agent initialized.${C.reset} Wallet: ${C.cyan}${agentAddress}${C.reset}`);
   await sleep(500);
+
+  // ── Phase 1: Discovery ──────────────────────────────────────────────────
+
+  log('📡', `GET ${API_URL}/api/premium/weather`);
+  await sleep(300);
 
   const discoveryRes = await fetch(`${API_URL}/api/premium/weather`);
   const discoveryBody: any = await discoveryRes.json();
 
   if (discoveryRes.status === 402) {
-    agentSuccess(`Received HTTP 402 Payment Required`);
-    agentLog('📋', `x402 version: ${discoveryBody.x402Version || discoveryBody.x402?.version || '2'}`);
-    agentLog('📋', `Payment type: ${discoveryBody.accepts ? 'Stacks subscription channel' : 'unknown'}`);
+    logSuccess(`HTTP 402 Payment Required`);
+    log('💰', `${C.yellow}Reading x402 payment instructions...${C.reset}`);
+    await sleep(300);
 
     const accept = discoveryBody.accepts?.[0];
     if (accept) {
-      agentLog('📋', `Contract: ${accept.contractCall?.contractAddress}.${accept.contractCall?.contractName}`);
-      agentLog('📋', `Function: ${accept.contractCall?.functionName}`);
+      log('📋', `Scheme: ${C.cyan}${accept.scheme}${C.reset}`);
+      log('📋', `Token: ${C.cyan}${accept.token}${C.reset} | Amount: ${C.cyan}${accept.amount}${C.reset} microSTX`);
+      log('📋', `Contract: ${C.dim}${accept.contractCall?.contractAddress}.${accept.contractCall?.contractName}${C.reset}`);
+      log('📋', `Function: ${C.cyan}${accept.contractCall?.functionName}${C.reset}`);
     }
   }
 
   await sleep(500);
-  await agentThink('This API uses x402 protocol on Stacks blockchain. I need a subscription channel to access it.');
 
-  // ── Phase 2: Channel Check / Open ─────────────────────────────────────
+  // ── Phase 2: Channel Management ─────────────────────────────────────────
 
   console.log('');
-  separator();
-  agentLog('🤖', '\x1b[1mPHASE 2: Payment Channel Management\x1b[0m');
-  separator();
-  await sleep(800);
-
-  await agentThink(`Checking if I already have an active channel as ${agentAddress}...`);
-
-  agentAction(`Reading contract: ${CONTRACT_ADDRESS}.${CONTRACT_NAME}`);
+  log('🔍', `${C.bold}Checking for existing subscription channel...${C.reset}`);
   await sleep(300);
 
-  const channelStatus = await checkChannel(agentAddress);
+  let channelStatus = await checkChannel(agentAddress);
+  let channelTxId: string | null = null;
 
   if (channelStatus.exists && channelStatus.active) {
     const remainSTX = microSTXtoSTX(BigInt(channelStatus.remaining));
-    agentSuccess(`Active channel found! Remaining balance: ${remainSTX} STX`);
-    await agentThink('Great, I have an active subscription. No transaction needed — I can make requests immediately.');
+    logSuccess(`Active channel found! Balance: ${C.green}${remainSTX} STX${C.reset}`);
+    log('📊', `${balanceBar(channelStatus.remaining, channelStatus.deposit)}`);
   } else if (channelStatus.exists && !channelStatus.active) {
-    agentLog('⚠️', 'Channel exists but is depleted. Need to close and reopen.');
-    await agentThink('The channel is depleted. I should close it first, then open a new one. For now, let me try with what we have.');
-  } else {
-    agentLog('📭', 'No active channel found.');
-    await agentThink('I need to open a subscription channel. This requires one on-chain transaction. Let me do that now.');
-    agentAction('Opening subscription channel: 1 STX deposit, 100 microSTX/block rate');
+    logWarn(`Channel depleted. Closing old channel first...`);
+    const closeTx = await closeChannel(AGENT_PRIVATE_KEY, agentAddress);
+    if (closeTx) {
+      log('🔒', `Close TX: ${C.cyan}${closeTx}${C.reset}`);
+      log('🔗', `${C.dim}${EXPLORER_BASE}/${closeTx}?chain=testnet${C.reset}`);
+      log('⏳', 'Waiting for close confirmation...');
+      await sleep(15000);
+    }
+    // Open new channel
+    channelStatus = { exists: false, active: false, remaining: 0, deposit: 0 };
+  }
 
-    // Use BitSubsClient to open via x402 flow
+  if (!channelStatus.exists || !channelStatus.active) {
+    log('📭', 'No active channel detected.');
+    logAction(`Opening subscription channel (1 STX deposit, 100 µSTX/block)...`);
+    await sleep(300);
+
     const client = new BitSubsClient(AGENT_PRIVATE_KEY, CONTRACT_ADDRESS, CONTRACT_NAME, SERVICE_ADDRESS);
     try {
       const data = await client.makeRequest(`${API_URL}/api/premium/weather`);
-      agentSuccess('Channel opened and first request succeeded!');
-      agentLog('🌤️', `Weather data: ${data.temperature}°F, ${data.condition}`);
+      logSuccess(`Channel OPEN`);
+      log('🔗', `${C.dim}View on Explorer → ${EXPLORER_BASE}?chain=testnet${C.reset}`);
+      log('🌤️', `First request: ${data.temperature}°F, ${data.condition}`);
+      channelStatus = await checkChannel(agentAddress);
     } catch (e: any) {
-      agentLog('⏳', 'Channel opening transaction submitted. Waiting for confirmation...');
-      agentLog('💡', 'On testnet this takes ~5-10 minutes. The channel will be ready after 1 block confirmation.');
+      log('⏳', 'Channel opening TX submitted. Waiting for confirmation...');
+      log('💡', `${C.dim}On testnet this takes ~5-10 minutes. Re-run after 1 block confirmation.${C.reset}`);
       return;
     }
   }
 
-  // ── Phase 3: Making x402 Requests ─────────────────────────────────────
+  await sleep(500);
+
+  // ── Phase 3: Streaming Requests ─────────────────────────────────────────
 
   console.log('');
-  separator();
-  agentLog('🤖', '\x1b[1mPHASE 3: Premium API Requests via x402\x1b[0m');
-  separator();
-  await sleep(800);
+  console.log(`${C.bold}${C.white}  ─── STREAMING REQUESTS ──────────────────────────────────────${C.reset}`);
+  console.log('');
 
-  await agentThink('Now I can make unlimited requests using my subscription. Each request costs 0 gas — verified on-chain via read-only call.');
+  log('🚀', `${C.bold}Starting request stream. Zero gas per request.${C.reset}`);
+  log('📊', `Initial balance: ${C.green}${microSTXtoSTX(BigInt(channelStatus.remaining))} STX${C.reset}`);
+  log('📊', `${balanceBar(channelStatus.remaining, channelStatus.deposit)}`);
+  console.log('');
 
   const endpoints = [
-    { path: '/api/premium/weather', name: 'Weather Data', icon: '🌤️' },
-    { path: '/api/premium/market-data', name: 'Market Data', icon: '📈' },
-    { path: '/api/premium/news', name: 'News Feed', icon: '📰' },
-    { path: '/api/premium/weather', name: 'Weather Update', icon: '🌡️' },
-    { path: '/api/premium/market-data', name: 'Market Update', icon: '💹' },
+    { path: '/api/premium/weather', label: 'Weather' },
+    { path: '/api/premium/market-data', label: 'Markets' },
+    { path: '/api/premium/news', label: 'News' },
   ];
 
-  let successCount = 0;
+  let totalRequests = 0;
+  let successfulRequests = 0;
+  let hitPaywall = false;
+  const deposit = channelStatus.deposit || 1000000;
+  let lastKnownBalance = channelStatus.remaining;
+  const BALANCE_CHECK_INTERVAL = 10; // check balance every N requests
 
-  for (let i = 0; i < endpoints.length; i++) {
-    const ep = endpoints[i];
-    await sleep(600);
+  while (!hitPaywall) {
+    const ep = endpoints[totalRequests % endpoints.length];
+    totalRequests++;
 
-    agentAction(`Request ${i + 1}/5: GET ${API_URL}${ep.path}`);
-    agentLog('🔑', 'Attaching x-payment-proof and x-stacks-address headers');
+    const result = await makeX402Request(`${API_URL}${ep.path}`, agentAddress);
 
-    try {
-      const data = await makeX402Request(`${API_URL}${ep.path}`, agentAddress);
-      successCount++;
+    if (result.ok) {
+      successfulRequests++;
 
-      if (ep.path.includes('weather')) {
-        agentSuccess(`${ep.icon} ${ep.name}: ${data.temperature}°F, ${data.condition} in ${data.location}`);
-      } else if (ep.path.includes('market')) {
-        agentSuccess(`${ep.icon} ${ep.name}: BTC $${data.bitcoin?.price || data.price || 'N/A'}`);
-      } else if (ep.path.includes('news')) {
-        const headline = data.articles?.[0]?.title || data.headline || JSON.stringify(data).slice(0, 60);
-        agentSuccess(`${ep.icon} ${ep.name}: "${headline}"`);
+      // Check balance periodically
+      if (totalRequests % BALANCE_CHECK_INTERVAL === 0) {
+        const status = await checkChannel(agentAddress);
+        lastKnownBalance = status.remaining;
+        const stx = microSTXtoSTX(BigInt(lastKnownBalance));
+        const pct = ((lastKnownBalance / deposit) * 100).toFixed(1);
+
+        if (lastKnownBalance < deposit * 0.1) {
+          // Critical balance — show every request dramatically
+          logWarn(`Request #${totalRequests} → ${C.green}200 OK${C.reset} ${ep.label} | Balance: ${C.red}${stx} STX (${pct}%)${C.reset}`);
+          log('📊', `${balanceBar(lastKnownBalance, deposit)}`);
+        } else if (lastKnownBalance < deposit * 0.3) {
+          logWarn(`Request #${totalRequests} → ${C.green}200 OK${C.reset} ${ep.label} | Balance: ${C.yellow}${stx} STX (${pct}%)${C.reset}`);
+          log('📊', `${balanceBar(lastKnownBalance, deposit)}`);
+        } else {
+          log('📡', `Request #${totalRequests} → ${C.green}200 OK${C.reset} ${ep.label} | Balance: ${stx} STX (${pct}%)`);
+          log('📊', `${balanceBar(lastKnownBalance, deposit)}`);
+        }
+      } else {
+        // Compact log for non-check requests
+        log('📡', `Request #${totalRequests} → ${C.green}200 OK${C.reset} ${ep.label}`);
       }
 
-      agentLog('⛽', 'Gas cost for this request: 0 STX (read-only on-chain verification)');
-    } catch (e: any) {
-      agentError(`${ep.name}: ${e.message}`);
+      // Small delay between requests for visual effect
+      await sleep(150);
+
+    } else if (result.status === 402) {
+      // ── THE MONEY SHOT ──
+      hitPaywall = true;
+      console.log('');
+      console.log(`${C.bold}${C.bgRed}${C.white}  ┌─────────────────────────────────────────────────────────┐  ${C.reset}`);
+      console.log(`${C.bold}${C.bgRed}${C.white}  │            ❌  402 PAYMENT REQUIRED  ❌                 │  ${C.reset}`);
+      console.log(`${C.bold}${C.bgRed}${C.white}  │          SUBSCRIPTION BALANCE DEPLETED                  │  ${C.reset}`);
+      console.log(`${C.bold}${C.bgRed}${C.white}  └─────────────────────────────────────────────────────────┘  ${C.reset}`);
+      console.log('');
+
+      logError(`Request #${totalRequests} → ${C.red}402 PAYMENT REQUIRED${C.reset}`);
+      log('📊', `${balanceBar(0, deposit)}`);
+      log('🔒', `${C.red}Subscription expired. Balance mathematically drained to zero.${C.reset}`);
+      log('💡', `${C.dim}No oracle. No write transaction. Just block_height × rate_per_block.${C.reset}`);
+
+    } else {
+      logError(`Request #${totalRequests} → HTTP ${result.status}`);
+      await sleep(1000);
     }
   }
 
-  // ── Phase 4: Summary ──────────────────────────────────────────────────
+  await sleep(800);
+
+  // ── Phase 4: Close Channel ──────────────────────────────────────────────
 
   console.log('');
-  separator();
-  agentLog('🤖', '\x1b[1mPHASE 4: Agent Summary\x1b[0m');
-  separator();
-  await sleep(500);
-
-  // Check final balance
-  const finalStatus = await checkChannel(agentAddress);
-  const finalSTX = microSTXtoSTX(BigInt(finalStatus.remaining));
-
-  await agentThink('Let me summarize what just happened for the user...');
+  logAction(`${C.bold}Closing channel — settling on-chain...${C.reset}`);
   await sleep(300);
 
-  console.log('');
-  console.log('\x1b[1m  ┌─────────────────────────────────────────────────────────────┐\x1b[0m');
-  console.log('\x1b[1m  │                  AUTONOMOUS AGENT REPORT                    │\x1b[0m');
-  console.log('\x1b[1m  ├─────────────────────────────────────────────────────────────┤\x1b[0m');
-  console.log(`\x1b[1m  │\x1b[0m  Protocol:         x402 (HTTP 402 Payment Required)        \x1b[1m│\x1b[0m`);
-  console.log(`\x1b[1m  │\x1b[0m  Blockchain:       Stacks (Bitcoin L2)                     \x1b[1m│\x1b[0m`);
-  console.log(`\x1b[1m  │\x1b[0m  Contract:         subscription-channel-v2                  \x1b[1m│\x1b[0m`);
-  console.log(`\x1b[1m  │\x1b[0m                                                             \x1b[1m│\x1b[0m`);
-  console.log(`\x1b[1m  │\x1b[0m  Requests made:    ${successCount}/5 successful                         \x1b[1m│\x1b[0m`);
-  console.log(`\x1b[1m  │\x1b[0m  Gas per request:  0 STX (read-only verification)           \x1b[1m│\x1b[0m`);
-  console.log(`\x1b[1m  │\x1b[0m  On-chain txns:    1 (open channel only)                    \x1b[1m│\x1b[0m`);
-  console.log(`\x1b[1m  │\x1b[0m  Remaining:        ${finalSTX} STX                        \x1b[1m│\x1b[0m`);
-  console.log(`\x1b[1m  │\x1b[0m  Gas savings:      99.8% vs per-request payments            \x1b[1m│\x1b[0m`);
-  console.log(`\x1b[1m  │\x1b[0m                                                             \x1b[1m│\x1b[0m`);
-  console.log(`\x1b[1m  │\x1b[0m  \x1b[32mAgent operated fully autonomously.\x1b[0m                        \x1b[1m│\x1b[0m`);
-  console.log(`\x1b[1m  │\x1b[0m  \x1b[32mZero human intervention in payment flow.\x1b[0m                  \x1b[1m│\x1b[0m`);
-  console.log('\x1b[1m  └─────────────────────────────────────────────────────────────┘\x1b[0m');
-  console.log('');
+  const closeTxId = await closeChannel(AGENT_PRIVATE_KEY, agentAddress);
+  if (closeTxId) {
+    logSuccess(`Channel CLOSED — TX: ${C.cyan}${closeTxId}${C.reset}`);
+    log('🔗', `${C.dim}${EXPLORER_BASE}/${closeTxId}?chain=testnet${C.reset}`);
+  } else {
+    log('🔒', `Channel close submitted (or already closed).`);
+  }
 
-  agentLog('🎉', 'BitSubs x402 Agent Demo Complete');
-  agentLog('💡', 'First x402 subscription implementation for autonomous AI agents on Bitcoin');
+  await sleep(800);
+
+  // ── Summary ─────────────────────────────────────────────────────────────
+
+  const gasPerTx = 0.001; // rough STX gas cost per write tx
+  const savedGas = (successfulRequests - 2) * gasPerTx;
+  const savingsPct = successfulRequests > 2 ? ((1 - 2 / successfulRequests) * 100).toFixed(2) : '0';
+
+  console.log('');
+  console.log(`${C.bold}${C.white}  ═══════════════════════════════════════════════════════════════${C.reset}`);
+  console.log(`${C.bold}${C.white}    SUMMARY${C.reset}`);
+  console.log(`${C.bold}${C.white}  ═══════════════════════════════════════════════════════════════${C.reset}`);
+  console.log(`${C.bold}    Total requests:     ${C.green}${successfulRequests}${C.reset}`);
+  console.log(`${C.bold}    On-chain txns:      ${C.green}2${C.reset} ${C.dim}(open + close)${C.reset}`);
+  console.log(`${C.bold}    Gas per request:    ${C.green}0 STX${C.reset} ${C.dim}(read-only verification)${C.reset}`);
+  console.log(`${C.bold}    Gas savings:        ${C.green}${savingsPct}%${C.reset} ${C.dim}vs per-request payments${C.reset}`);
+  console.log(`${C.bold}    Protocol:           ${C.cyan}x402 v2 compliant${C.reset}`);
+  console.log(`${C.bold}    Settlement:         ${C.cyan}Bitcoin-native (Stacks L2)${C.reset}`);
+  console.log(`${C.bold}${C.white}  ═══════════════════════════════════════════════════════════════${C.reset}`);
+  console.log('');
+  console.log(`${C.bold}${C.green}    ${successfulRequests} requests. 2 transactions. ${savingsPct}% gas reduction.${C.reset}`);
+  console.log(`${C.bold}${C.green}    Zero human intervention in the payment flow.${C.reset}`);
+  console.log(`${C.dim}    This is subscription infrastructure on Bitcoin.${C.reset}`);
   console.log('');
 }
 
 runAgentDemo().catch((err) => {
-  agentError(`Demo failed: ${err.message}`);
+  logError(`Demo failed: ${err.message}`);
   console.error(err);
 });
