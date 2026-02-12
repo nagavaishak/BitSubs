@@ -249,7 +249,8 @@ app.get('/api/stats', async (req, res) => {
   ]);
 
   const totalRequests = economyStats.totalRequests;
-  const totalTx = economyStats.totalTransactions;
+  // Each active channel = 1 open-channel tx on-chain
+  const totalTx = (ch_2to1.active ? 1 : 0) + (ch_3to2.active ? 1 : 0);
   const gasReduction = totalRequests > 2
     ? ((1 - totalTx / totalRequests) * 100).toFixed(2) + '%'
     : '0%';
