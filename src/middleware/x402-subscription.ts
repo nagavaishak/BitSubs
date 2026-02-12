@@ -6,8 +6,6 @@ import {
 } from '@stacks/transactions';
 import { StacksTestnet, StacksMainnet } from '@stacks/network';
 import {
-  networkToCAIP2,
-  getNetworkInstance,
   X402_HEADERS,
 } from 'x402-stacks';
 
@@ -19,13 +17,16 @@ interface X402Config {
 }
 
 function buildPaymentInstructions(config: X402Config, resource: string) {
+  const network = config.network === 'testnet' ? 'stacks-testnet' : 'stacks-mainnet';
   return {
+    status: 402,
+    error: 'Payment Required',
     x402Version: 2,
     resource: { url: resource, description: 'Open subscription channel for continuous API access' },
     accepts: [
       {
         scheme: 'subscription-channel',
-        network: networkToCAIP2(config.network),
+        network,
         token: 'STX',
         amount: '1000000',
         payTo: config.serviceAddress,
@@ -42,7 +43,7 @@ function buildPaymentInstructions(config: X402Config, resource: string) {
       },
       {
         scheme: 'subscription-channel',
-        network: networkToCAIP2(config.network),
+        network,
         token: 'sBTC',
         amount: '10000',
         payTo: config.serviceAddress,
