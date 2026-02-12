@@ -40,7 +40,7 @@ async function openChannel(senderKey: string, senderName: string, serviceAddr: s
       senderKey,
       network,
       anchorMode: AnchorMode.Any,
-      postConditionMode: 0x02,
+      postConditionMode: 0x01, // Allow
     });
 
     const result = await broadcastTransaction(tx, network);
