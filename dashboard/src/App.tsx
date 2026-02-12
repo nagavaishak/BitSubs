@@ -9,6 +9,7 @@ import StatsCards from './components/StatsCards'
 import BlockchainInfo from './components/BlockchainInfo'
 import Docs from './components/Docs'
 import RealWalletDemo from './components/RealWalletDemo'
+import Economy from './components/Economy'
 
 interface DemoState {
   isRunning: boolean
@@ -35,7 +36,7 @@ interface DemoState {
 }
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<'demo' | 'docs'>('demo')
+  const [currentPage, setCurrentPage] = useState<'demo' | 'docs' | 'economy'>('demo')
   const [demoMode, setDemoMode] = useState<'quick' | 'wallet'>('quick')
   const [demoState, setDemoState] = useState<DemoState>({
     isRunning: false,
@@ -157,6 +158,7 @@ function App() {
           </div>
           <nav className="nav-links">
             <a href="#" onClick={(e) => { e.preventDefault(); setCurrentPage('docs'); }} className="nav-link">/docs</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); setCurrentPage('economy'); }} className="nav-link">/economy</a>
             <a href="https://github.com/nagavaishak/BitSubs" target="_blank" rel="noopener noreferrer" className="nav-link">/github</a>
             <a href="#" onClick={(e) => { e.preventDefault(); setCurrentPage('demo'); }} className="nav-link">/demo</a>
             <a href="https://bitsubs-production.up.railway.app" target="_blank" rel="noopener noreferrer" className="cta-button">
@@ -168,6 +170,8 @@ function App() {
 
       {currentPage === 'docs' ? (
         <Docs />
+      ) : currentPage === 'economy' ? (
+        <Economy />
       ) : (
         <>
       {/* Hero Section */}
