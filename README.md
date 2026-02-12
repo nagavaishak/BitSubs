@@ -8,9 +8,11 @@
 
 ## What This Is
 
-BitSubs enables continuous subscription access using payment channels on Stacks. Services stay open while STX or sBTC micropayments stream, and automatically cut off when the channel balance depletes.
+BitSubs enables continuous subscription access using payment channels on Stacks. Services stay open while STX micropayments stream, and automatically cut off when the channel balance depletes.
 
 **Key Innovation**: 1000 subscription requests = 2 on-chain transactions (99.8% gas reduction)
+
+**New**: Multi-agent economy where 3 AI agents autonomously pay each other through subscription channels — live on the [/economy dashboard](https://bitsubs.vercel.app)
 
 ## Try It Now
 
@@ -20,22 +22,30 @@ BitSubs enables continuous subscription access using payment channels on Stacks.
 curl https://bitsubs-production.up.railway.app/api/premium/weather
 ```
 
-Returns a 402 Payment Required response with x402 payment instructions:
+Returns a 402 Payment Required response with x402 v2 payment instructions:
 ```json
 {
   "error": "Payment Required",
-  "x402": {
-    "version": 1,
-    "paymentInstructions": {
-      "network": "stacks-testnet",
-      "tokens": [...],
-      "description": "Open subscription channel for continuous API access"
+  "x402Version": 2,
+  "accepts": [{
+    "scheme": "subscription-channel",
+    "network": "bip122:000000000019d6689c085ae165831e93/slip44:5757",
+    "token": "STX",
+    "amount": "1000000",
+    "contractCall": {
+      "contractAddress": "ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP",
+      "contractName": "subscription-channel-v2",
+      "functionName": "open-channel",
+      "functionArgs": ["principal:ST4F...", "uint:1000000", "uint:100"]
     }
-  }
+  }]
 }
 ```
 
-**Interactive Demo:** Visit [bitsubs.vercel.app](https://bitsubs.vercel.app) to see the subscription system in action!
+**Interactive Demos:**
+- [Quick Demo](https://bitsubs.vercel.app) - Simulated subscription flow
+- [Real Wallet Demo](https://bitsubs.vercel.app) - Connect Hiro/Leather wallet
+- [Multi-Agent Economy](https://bitsubs.vercel.app) - 3 AI agents paying each other live
 
 ## How It Works
 
@@ -65,43 +75,47 @@ BitSubs implements the x402 payment protocol for Stacks, enabling standardized p
 - `x-payment-proof`: Payment proof (base64-encoded proof of channel ownership)
 - `x-stacks-address`: Stacks address making the request
 
-**Response (402):**
+**Response (402) - x402 v2 format:**
 ```json
 {
   "error": "Payment Required",
-  "x402": {
-    "version": 1,
-    "paymentInstructions": {
-      "network": "stacks-testnet",
-      "chainId": "stacks:testnet",
-      "tokens": [
-        {
-          "token": "STX",
-          "amount": "1000000",
-          "recipient": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
-          "contractCall": {
-            "contractAddress": "ST...",
-            "contractName": "subscription-channel-v2",
-            "functionName": "open-channel",
-            "functionArgs": ["principal:...", "uint:1000000", "uint:100"]
-          }
-        },
-        {
-          "token": "sBTC",
-          "amount": "10000",
-          "recipient": "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
-          "contractCall": {
-            "contractAddress": "ST...",
-            "contractName": "subscription-channel-v2",
-            "functionName": "open-channel-sbtc",
-            "functionArgs": ["principal:...", "uint:10000", "uint:1"]
-          }
-        }
-      ],
-      "description": "Open subscription channel for continuous API access",
-      "resource": "/api/premium/data"
+  "x402Version": 2,
+  "accepts": [
+    {
+      "scheme": "subscription-channel",
+      "network": "bip122:000000000019d6689c085ae165831e93/slip44:5757",
+      "token": "STX",
+      "amount": "1000000",
+      "payTo": "ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP",
+      "contractCall": {
+        "contractAddress": "ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP",
+        "contractName": "subscription-channel-v2",
+        "functionName": "open-channel",
+        "functionArgs": [
+          "principal:ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP",
+          "uint:1000000",
+          "uint:100"
+        ]
+      }
+    },
+    {
+      "scheme": "subscription-channel",
+      "network": "bip122:000000000019d6689c085ae165831e93/slip44:5757",
+      "token": "sBTC",
+      "amount": "10000",
+      "payTo": "ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP",
+      "contractCall": {
+        "contractAddress": "ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP",
+        "contractName": "subscription-channel-v2",
+        "functionName": "open-channel-sbtc",
+        "functionArgs": [
+          "principal:ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP",
+          "uint:10000",
+          "uint:1"
+        ]
+      }
     }
-  }
+  ]
 }
 ```
 
@@ -170,8 +184,8 @@ This is the **first x402 implementation for continuous subscriptions** - combini
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/bitsubs
-cd bitsubs
+git clone https://github.com/nagavaishak/BitSubs
+cd BitSubs
 
 # Install dependencies
 npm install
@@ -191,33 +205,45 @@ clarinet integrate
 clarinet deployments apply -p testnet
 ```
 
-### Run the Demo API
+### Run the Demo API Server
 
 ```bash
-# Set environment variables
-export CONTRACT_ADDRESS="YOUR_DEPLOYED_CONTRACT_ADDRESS"
-export SERVICE_ADDRESS="YOUR_SERVICE_WALLET_ADDRESS"
-
-# Start the premium API server
+# Start the premium API server (multi-agent economy)
 npm run server
+
+# Or for development
+npm run dev
 ```
+
+The server includes:
+- `/api/premium/*` - Weather Oracle endpoints (Agent 1)
+- `/api/signals/*` - Trading Analyst endpoints (Agent 2)
+- `/api/portfolio/*` - Portfolio Manager endpoints (Agent 3)
+- `/api/stats` - Live economy stats (for /economy dashboard)
 
 ### Run the Agent Demo
 
 ```bash
-# Set environment variables
-export PRIVATE_KEY="YOUR_TESTNET_PRIVATE_KEY"
-export CONTRACT_ADDRESS="YOUR_DEPLOYED_CONTRACT_ADDRESS"
-export SERVICE_ADDRESS="YOUR_SERVICE_WALLET_ADDRESS"
-
-# Run the demo
+# Cinematic terminal demo
 npm run demo
+
+# Or watch an agent stream requests until 402 cutoff
+npm run agent-demo
 ```
+
+### Open Economy Channels (for multi-agent demo)
+
+```bash
+# Fund Agent 2 and Agent 3 from testnet faucet, then:
+npm run open-channels
+```
+
+This opens 2 subscription channels on-chain so the economy agents can pay each other.
 
 ## Project Structure
 
 ```
-bitsubs/
+BitSubs/
 ├── bitsubs/                          # Clarinet project
 │   ├── contracts/
 │   │   └── subscription-channel-v2.clar # Core Clarity contract
@@ -226,12 +252,22 @@ bitsubs/
 │   └── Clarinet.toml
 ├── src/
 │   ├── middleware/
-│   │   └── x402-subscription.ts      # Express middleware
+│   │   └── x402-subscription.ts      # x402 v2 Express middleware
 │   ├── client/
 │   │   └── subscription-client.ts    # TypeScript SDK
 │   └── demo/
-│       ├── premium-api.ts            # Protected service demo
-│       └── agent.ts                  # Terminal agent demo
+│       ├── premium-api.ts            # Multi-agent economy server
+│       ├── agent.ts                  # Cinematic terminal demo
+│       └── open-economy-channels.ts  # Channel opener script
+├── dashboard/                        # React + Vite frontend
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── components/
+│   │   │   ├── Economy.tsx           # Live multi-agent dashboard
+│   │   │   ├── RealWalletDemo.tsx    # Hiro/Leather integration
+│   │   │   └── ...
+│   │   └── App.css
+│   └── package.json
 ├── README.md
 ├── package.json
 └── tsconfig.json
@@ -334,14 +370,16 @@ const address = client.getAddress();
 
 ### Express Middleware
 
+Protect your API endpoints with 3 lines of code:
+
 ```typescript
-import { x402SubscriptionMiddleware } from './src/middleware/x402-subscription';
+import { x402SubscriptionMiddleware } from '@bitsubs/middleware';
 
 app.use('/api/premium/*', x402SubscriptionMiddleware({
   contractAddress: 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP',
   contractName: 'subscription-channel-v2',
   network: 'testnet',
-  serviceAddress: 'ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP'
+  serviceAddress: 'YOUR_SERVICE_ADDRESS'
 }));
 
 app.get('/api/premium/data', (req, res) => {
@@ -349,13 +387,21 @@ app.get('/api/premium/data', (req, res) => {
 });
 ```
 
+The middleware automatically:
+1. Returns 402 Payment Required with x402 v2 schema for unpaid requests
+2. Verifies payment proof via on-chain `verify-payment` call
+3. Grants access if channel balance > 0
+
 ## Use Cases
+
+### Multi-Agent AI Economies
+Autonomous AI agents paying each other for data/services through subscription channels. **See it live:** [/economy dashboard](https://bitsubs.vercel.app) — 3 agents (Weather Oracle, Trading Analyst, Portfolio Manager) paying each other in real-time.
 
 ### SaaS on Bitcoin
 Monthly/annual subscriptions for web services without recurring credit card charges.
 
-### AI Agent Subscriptions
-Autonomous agents paying per-block for API access without manual intervention.
+### AI Agent API Access
+Autonomous agents paying per-block for API access without manual intervention. No human in the loop, pure agent-to-service subscriptions.
 
 ### Streaming Content Monetization
 Pay-per-second video streaming with automatic cutoff when balance depletes.
@@ -375,23 +421,42 @@ Smart devices paying for network/API access proportional to usage time.
 - **Explorer**: [View on Stacks Explorer](https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet)
 
 ### API Endpoints
+
+**Public:**
 - `GET /health` - Health check
-- `GET /api/premium/weather` - Protected endpoint (requires subscription)
-- `GET /api/premium/market-data` - Protected endpoint (requires subscription)
-- `GET /api/premium/news` - Protected endpoint (requires subscription)
+- `GET /info` - Service info
+
+**Protected (Weather Oracle - Agent 1):**
+- `GET /api/premium/weather` - Requires subscription channel
+- `GET /api/premium/market-data` - Requires subscription channel
+- `GET /api/premium/news` - Requires subscription channel
+
+**Protected (Trading Analyst - Agent 2):**
+- `GET /api/signals/latest` - Requires subscription channel
+- `GET /api/signals/history` - Requires subscription channel
+
+**Protected (Portfolio Manager - Agent 3):**
+- `GET /api/portfolio/latest` - Requires subscription channel
+- `GET /api/portfolio/history` - Requires subscription channel
+
+**Economy Stats:**
+- `GET /api/stats` - Live multi-agent economy data (public)
 
 ## Technical Details
 
-- **Protocol**: x402 payment protocol for Stacks
-- **Blockchain**: Stacks testnet/mainnet
-- **Token**: STX (sBTC support roadmap)
+- **Protocol**: x402 v2 payment protocol for Stacks
+- **x402 Package**: Integrated with `x402-stacks` npm package for protocol-layer utilities
+- **Blockchain**: Stacks testnet (Bitcoin L2)
+- **Token**: STX (sBTC support in contract, pending testnet stability)
 - **Smart Contract Language**: Clarity v2
 - **Backend**: Node.js + Express + TypeScript
-- **Testing**: Vitest + Clarinet
+- **Frontend**: React + Vite + Framer Motion
+- **Testing**: Vitest + Clarinet (13/13 tests passing)
 - **Gas Optimization**: Read-only verification (no per-request writes)
-- **x402 Compliance**: Full schema compliance with payment channel verification
+- **x402 Compliance**: Full v2 schema compliance with subscription channel verification
 - **Deployed Contract**: `ST4FEH4FQ6JKFY4YQ8MENBX5PET23CE9JD2G2XMP.subscription-channel-v2` (testnet)
 - **Explorer**: https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet
+- **Live Infrastructure**: Vercel (dashboard) + Railway (API)
 
 ## Testing
 
@@ -429,11 +494,15 @@ cd bitsubs && npm test
 
 ## Roadmap
 
-- [ ] sBTC support for Bitcoin-native subscriptions
-- [ ] Multi-token support (USDC, USDCx)
+- [x] x402 v2 protocol compliance ✅
+- [x] Multi-agent economy demonstration ✅ [Live](https://bitsubs.vercel.app)
 - [x] Dashboard UI for channel management ✅ [Live](https://bitsubs.vercel.app)
+- [x] Real wallet integration (Hiro/Leather) ✅
+- [ ] sBTC support (contract ready, pending testnet stability)
+- [ ] Multi-token support (USDC, USDCx)
 - [ ] Batch channel operations
 - [ ] Subscription marketplace
+- [ ] Mainnet deployment
 
 ## Contributing
 
