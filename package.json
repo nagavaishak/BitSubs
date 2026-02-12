@@ -10,6 +10,7 @@
     "demo": "ts-node src/demo/agent.ts",
     "agent-demo": "ts-node src/demo/agent.ts",
     "server": "ts-node src/demo/premium-api.ts",
+    "open-channels": "ts-node src/demo/open-economy-channels.ts",
     "test": "cd bitsubs && npm test"
   },
   "keywords": [

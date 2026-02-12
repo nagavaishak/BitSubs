@@ -244,7 +244,7 @@ app.get('/api/portfolio/history', (req, res) => {
 app.get('/api/stats', async (req, res) => {
   // Fetch live channel balances
   const [ch_2to1, ch_3to2] = await Promise.all([
-    getChannelBalance(AGENT2.address, AGENT1.address),
+    getChannelBalance(AGENT2.address, SERVICE_ADDRESS),
     getChannelBalance(AGENT3.address, AGENT2.address),
   ]);
 
@@ -277,7 +277,7 @@ app.get('/api/stats', async (req, res) => {
         subscribedTo: 'Weather Oracle',
         channel: {
           subscriber: AGENT2.address,
-          service: AGENT1.address,
+          service: SERVICE_ADDRESS,
           active: ch_2to1.active,
           remaining: ch_2to1.remaining,
           deposit: ch_2to1.deposit,
