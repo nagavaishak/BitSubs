@@ -52,7 +52,7 @@ export default function Docs() {
 {`curl https://bitsubs-production.up.railway.app/api/premium/weather`}
           </pre>
           <p style={{ marginTop: '1rem', color: 'var(--stacks-text-secondary)' }}>
-            ↳ Returns 402 Payment Required with x402 payment instructions
+            ↳ Returns 402 Payment Required with x402 v2 payment instructions (subscription channel options)
           </p>
         </div>
 

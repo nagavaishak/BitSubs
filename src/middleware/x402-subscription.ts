@@ -5,12 +5,60 @@ import {
   principalCV
 } from '@stacks/transactions';
 import { StacksTestnet, StacksMainnet } from '@stacks/network';
+import {
+  networkToCAIP2,
+  getNetworkInstance,
+  X402_HEADERS,
+} from 'x402-stacks';
 
 interface X402Config {
   contractAddress: string;
   contractName: string;
   network: 'testnet' | 'mainnet';
   serviceAddress: string;
+}
+
+function buildPaymentInstructions(config: X402Config, resource: string) {
+  return {
+    x402Version: 2,
+    resource: { url: resource, description: 'Open subscription channel for continuous API access' },
+    accepts: [
+      {
+        scheme: 'subscription-channel',
+        network: networkToCAIP2(config.network),
+        token: 'STX',
+        amount: '1000000',
+        payTo: config.serviceAddress,
+        contractCall: {
+          contractAddress: config.contractAddress,
+          contractName: config.contractName,
+          functionName: 'open-channel',
+          functionArgs: [
+            `principal:${config.serviceAddress}`,
+            'uint:1000000',
+            'uint:100'
+          ]
+        }
+      },
+      {
+        scheme: 'subscription-channel',
+        network: networkToCAIP2(config.network),
+        token: 'sBTC',
+        amount: '10000',
+        payTo: config.serviceAddress,
+        contractCall: {
+          contractAddress: config.contractAddress,
+          contractName: config.contractName,
+          functionName: 'open-channel-sbtc',
+          functionArgs: [
+            `principal:${config.serviceAddress}`,
+            'uint:10000',
+            'uint:1'
+          ]
+        }
+      }
+    ]
+  };
 }
 
 export function x402SubscriptionMiddleware(config: X402Config) {
@@ -20,54 +68,16 @@ export function x402SubscriptionMiddleware(config: X402Config) {
 
     // x402 Protocol: Return payment instructions if no proof provided
     if (!paymentProof || !stacksAddress) {
-      return res.status(402).json({
-        error: 'Payment Required',
-        x402: {
-          version: 1,
-          paymentInstructions: {
-            network: 'stacks-testnet',
-            chainId: 'stacks:testnet',
-            tokens: [
-              {
-                token: 'STX',
-                amount: '1000000',
-                recipient: config.serviceAddress,
-                contractCall: {
-                  contractAddress: config.contractAddress,
-                  contractName: config.contractName,
-                  functionName: 'open-channel',
-                  functionArgs: [
-                    `principal:${config.serviceAddress}`,
-                    'uint:1000000',
-                    'uint:100'
-                  ]
-                }
-              },
-              {
-                token: 'sBTC',
-                amount: '10000',
-                recipient: config.serviceAddress,
-                contractCall: {
-                  contractAddress: config.contractAddress,
-                  contractName: config.contractName,
-                  functionName: 'open-channel-sbtc',
-                  functionArgs: [
-                    `principal:${config.serviceAddress}`,
-                    'uint:10000',
-                    'uint:1'
-                  ]
-                }
-              }
-            ],
-            description: 'Open subscription channel for continuous API access',
-            resource: req.path
-          }
-        }
-      });
+      const paymentRequired = buildPaymentInstructions(config, req.path);
+      res.setHeader(
+        X402_HEADERS.PAYMENT_REQUIRED,
+        Buffer.from(JSON.stringify(paymentRequired)).toString('base64')
+      );
+      return res.status(402).json(paymentRequired);
     }
 
     try {
-      // Verify payment channel on-chain
+      // Verify subscription channel on-chain (read-only, zero gas)
       const network = config.network === 'testnet'
         ? new StacksTestnet()
         : new StacksMainnet();
@@ -88,48 +98,16 @@ export function x402SubscriptionMiddleware(config: X402Config) {
 
       // x402 Protocol: Return payment instructions if channel inactive
       if (!channelData.value || channelData.value.active?.value === false) {
-        return res.status(402).json({
+        const paymentRequired = {
+          ...buildPaymentInstructions(config, req.path),
           error: 'Subscription Expired',
-          x402: {
-            version: 1,
-            currentBalance: channelData.value?.remaining?.value || '0',
-            paymentInstructions: {
-              network: 'stacks-testnet',
-              tokens: [
-                {
-                  token: 'STX',
-                  amount: '1000000',
-                  recipient: config.serviceAddress,
-                  contractCall: {
-                    contractAddress: config.contractAddress,
-                    contractName: config.contractName,
-                    functionName: 'open-channel',
-                    functionArgs: [
-                      `principal:${config.serviceAddress}`,
-                      'uint:1000000',
-                      'uint:100'
-                    ]
-                  }
-                },
-                {
-                  token: 'sBTC',
-                  amount: '10000',
-                  recipient: config.serviceAddress,
-                  contractCall: {
-                    contractAddress: config.contractAddress,
-                    contractName: config.contractName,
-                    functionName: 'open-channel-sbtc',
-                    functionArgs: [
-                      `principal:${config.serviceAddress}`,
-                      'uint:10000',
-                      'uint:1'
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        });
+          currentBalance: channelData.value?.remaining?.value || '0',
+        };
+        res.setHeader(
+          X402_HEADERS.PAYMENT_REQUIRED,
+          Buffer.from(JSON.stringify(paymentRequired)).toString('base64')
+        );
+        return res.status(402).json(paymentRequired);
       }
 
       console.log(`✅ x402 verified: ${stacksAddress} - balance: ${channelData.value.remaining?.value}`);

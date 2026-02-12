@@ -78,7 +78,7 @@ app.get('/info', (req, res) => {
         '/info'
       ]
     },
-    instructions: 'Include x-subscriber-id header to access premium endpoints'
+    instructions: 'Endpoints are protected by x402 protocol. Payment is handled automatically via payment-signature header.'
   });
 });
 

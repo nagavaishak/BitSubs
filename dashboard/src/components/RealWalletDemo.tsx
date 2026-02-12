@@ -273,8 +273,11 @@ export default function RealWalletDemo() {
 
       if (response.status === 402) {
         addLog('✓ Got HTTP 402 Payment Required')
-        addLog('x402 version: ' + data.x402?.version)
-        addLog('Payment instructions included: ' + (data.x402?.paymentInstructions ? 'YES' : 'NO'))
+        addLog('x402 version: ' + (data.x402Version || data.x402?.version))
+        addLog('Payment options: ' + (data.accepts?.length || (data.x402?.paymentInstructions ? 'YES' : 'NO')))
+        if (data.accepts?.[0]) {
+          addLog('Token: ' + data.accepts[0].token + ' | Amount: ' + data.accepts[0].amount)
+        }
         console.log('Full 402 response:', data)
       }
     } catch (error: any) {

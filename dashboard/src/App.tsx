@@ -275,25 +275,25 @@ function App() {
                 <div className="terminal-line">
                   <span className="line-number">003</span>
                   <span className="line-text">
-                    <span className="text-dim">{"x402: {"}</span>
+                    <span className="text-dim">{"x402Version: 2, accepts: [{"}</span>
                   </span>
                 </div>
                 <div className="terminal-line indent">
                   <span className="line-number">004</span>
                   <span className="line-text">
-                    <span className="text-dim">  contractAddress: "ST..."</span>
+                    <span className="text-dim">  scheme: "subscription-channel"</span>
                   </span>
                 </div>
                 <div className="terminal-line indent">
                   <span className="line-number">005</span>
                   <span className="line-text">
-                    <span className="text-dim">  amount: "1000000"</span>
+                    <span className="text-dim">  token: "STX", amount: "1000000"</span>
                   </span>
                 </div>
                 <div className="terminal-line">
                   <span className="line-number">006</span>
                   <span className="line-text">
-                    <span className="text-dim">{"}"}</span>
+                    <span className="text-dim">{"}]"}</span>
                   </span>
                 </div>
                 <div className="terminal-line">
@@ -360,7 +360,7 @@ function App() {
             <div className="step-code">
               status: <span className="code-value">402</span>
               <br />
-              x402.version: <span className="code-value">1</span>
+              x402Version: <span className="code-value">2</span>
             </div>
           </motion.div>
 

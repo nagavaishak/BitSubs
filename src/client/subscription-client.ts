@@ -8,12 +8,9 @@ import {
   FungibleConditionCode,
   callReadOnlyFunction,
   cvToJSON,
-  createStacksPrivateKey,
-  getPublicKey,
-  getAddressFromPublicKey,
-  TransactionVersion
 } from '@stacks/transactions';
 import { StacksTestnet } from '@stacks/network';
+import { privateKeyToAccount } from 'x402-stacks';
 
 export class BitSubsClient {
   private network: StacksTestnet;
@@ -26,9 +23,8 @@ export class BitSubsClient {
     private serviceAddress: string
   ) {
     this.network = new StacksTestnet();
-    const privateKeyObj = createStacksPrivateKey(privateKey);
-    const publicKey = getPublicKey(privateKeyObj);
-    this.stacksAddress = getAddressFromPublicKey(publicKey.data, TransactionVersion.Testnet);
+    const account = privateKeyToAccount(privateKey, 'testnet');
+    this.stacksAddress = account.address;
   }
 
   private async createPaymentProof(resource: string): Promise<string> {
@@ -50,7 +46,8 @@ export class BitSubsClient {
 
       if (!hasChannel) {
         console.log('🔓 Opening channel per x402 instructions...');
-        const instructions = body.x402.paymentInstructions.tokens[0];
+        // Support both v2 (accepts[]) and v1 (x402.paymentInstructions.tokens[]) formats
+        const instructions = body.accepts?.[0] || body.x402?.paymentInstructions?.tokens?.[0];
         await this.openChannelFromInstructions(instructions.contractCall);
         console.log('✅ Channel opened');
         await this.sleep(15000); // Wait for confirmation
@@ -109,7 +106,7 @@ export class BitSubsClient {
 
   private parseArg(arg: string): any {
     const [type, value] = arg.split(':');
-    if (type === 'uint') return BigInt(value); // FIXED (Bug #2)
+    if (type === 'uint') return BigInt(value);
     if (type === 'principal') return value;
     return value;
   }
@@ -122,7 +119,7 @@ export class BitSubsClient {
         functionName: 'verify-payment',
         functionArgs: [
           principalCV(this.stacksAddress),
-          principalCV(this.serviceAddress) // FIXED (Bug #4)
+          principalCV(this.serviceAddress)
         ],
         network: this.network,
         senderAddress: this.stacksAddress
