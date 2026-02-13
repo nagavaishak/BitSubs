@@ -1,205 +1,392 @@
-# BitSubs Demo Script - 5 Minutes to Win
+# BitSubs Demo Script — 6:30 to Win
 
-**Total time: 5:00**
-**Rule: Never stop moving. Every second shows something live and real.**
+**Total time: 6:30 (speed to 1.25x if needed for 5:00 limit)**
 
----
-
-## PRE-DEMO SETUP (before recording)
-
-Open these tabs/windows BEFORE hitting record:
-
-1. **Terminal 1**: Ready with `curl https://bitsubs-production.up.railway.app/api/premium/weather`
-2. **Terminal 2**: Ready with `npm run demo` (in BitSubs project dir)
-3. **Browser Tab 1**: https://bitsubs.vercel.app (landing page)
-4. **Browser Tab 2**: https://bitsubs.vercel.app (click /economy BEFORE recording so it's loaded)
-5. **Browser Tab 3**: https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet (contract)
-6. **VS Code**: Open `src/middleware/x402-subscription.ts` (the 3-line middleware)
-
-Test everything works. Refresh economy page, confirm ACTIVE channels.
+**Rule: Every second shows something live. No slides. No static screenshots. Only real, working code.**
 
 ---
 
-## [0:00 - 0:30] THE HOOK (30 seconds)
+## 🎬 PRE-RECORDING SETUP
 
-**[Show Terminal 1]**
+### Screen Layout (before hitting record)
 
-Say:
-> "Every x402 implementation you've seen today has the same problem. Watch."
+**Desktop 1 - Terminals:**
+1. **Terminal 1 (left half)**:
+   ```bash
+   cd /Users/shashank/Desktop/Hackathon\ projects/BitSubs
+   # Type but DON'T run yet:
+   curl -s https://bitsubs-production.up.railway.app/api/premium/weather | python3 -m json.tool
+   ```
 
-Run:
+2. **Terminal 2 (right half)**:
+   ```bash
+   cd /Users/shashank/Desktop/Hackathon\ projects/BitSubs
+   # Ready to run:
+   npm run demo
+   ```
+
+**Desktop 2 - Browser (Chrome/Firefox):**
+
+Open these tabs IN THIS ORDER (left to right):
+
+1. **Tab 1**: https://bitsubs.vercel.app (landing page, scroll to top)
+2. **Tab 2**: https://bitsubs.vercel.app (click `/economy` BEFORE recording, let it load with ACTIVE channels)
+3. **Tab 3**: https://bitsubs.vercel.app (stay on landing, ready to click "Real Wallet Demo")
+4. **Tab 4**: https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet
+5. **Tab 5**: README.md architecture diagram (scroll to "Architecture" section)
+
+**Desktop 3 - VS Code:**
+
+Open these files in tabs:
+1. `src/middleware/x402-subscription.ts` (scroll to line 64 - the middleware function)
+2. `bitsubs/contracts/subscription-channel-v2.clar` (scroll to line 60 - verify-payment function)
+
+**Pre-flight checklist:**
+- [ ] Economy page shows ACTIVE channels (both Agent 2 and Agent 3)
+- [ ] Leather wallet is installed and unlocked (for wallet demo)
+- [ ] Clear terminal history (no clutter)
+- [ ] Close all other apps (notifications off, DND mode on)
+- [ ] Test `npm run demo` runs without errors
+- [ ] Check audio levels
+
+---
+
+## [0:00 - 0:08] OPENING - SILENCE + CURL
+
+**Screen: Terminal 1 (fullscreen)**
+
+**Action:** Type the curl command slowly (like you're thinking):
 ```bash
-curl https://bitsubs-production.up.railway.app/api/premium/weather
+curl -s https://bitsubs-production.up.railway.app/api/premium/weather | python3 -m json.tool
 ```
 
-**[402 response appears on screen]**
+Hit enter. 402 JSON appears, nicely formatted.
 
-> "402 Payment Required. Standard x402. But here's the question nobody's answering: what happens when an AI agent needs to call this API a thousand times? Ten thousand times?"
-
-> "With pay-per-request x402, that's ten thousand on-chain transactions. Thousands of dollars in gas. That doesn't work."
-
-> "BitSubs fixes this. Two transactions. That's it. Open a channel, close a channel. Everything in between is free."
+**Say nothing for 2 full seconds.** Let the 402 response sit on screen.
 
 ---
 
-## [0:30 - 1:30] LIVE AGENT DEMO (60 seconds)
+## [0:08 - 0:35] THE PROBLEM (27 seconds)
 
-**[Switch to Terminal 2]**
+**Screen: Stay on Terminal 1 with 402 response visible**
 
-Say:
-> "Let me show you. This is a real autonomous agent with a real Stacks wallet."
+**Say:**
 
-Run:
-```bash
-npm run demo
-```
+> "402 Payment Required. x402 on Bitcoin. Works perfectly — for one request."
 
-**[Agent starts - banner appears, channel opens, requests stream]**
+*Pause 1 beat.*
 
-> "It hits the API. Gets a 402. Reads the x402 v2 payment instructions. Opens a subscription channel on-chain — that's transaction number one."
+> "But here's the question nobody's asking. What happens when an AI agent needs this API ten thousand times? With standard x402, that's ten thousand on-chain transactions. At Stacks gas costs — that's unusable."
 
-**[Requests streaming in - green 200s]**
+*Pause 1 beat.*
 
-> "Now watch. Request after request after request. Every single one is verified on-chain through a read-only call to our Clarity contract. Zero gas. Zero writes. The balance drains mathematically — not per request, but per block."
+> "Every x402 project you've seen today has this problem. We solved it."
 
-**[Point to the balance bar as it shows]**
+*Pause 1 beat.*
 
-> "See the balance? It's calculated as: deposit minus elapsed blocks times rate. No storage writes. Pure math."
-
-**[When 402 hits or requests finish]**
-
-> "And when the balance runs out — 402. Access revoked. Channel closes — that's transaction number two. Done."
-
-> "Two on-chain transactions. For unlimited API calls. That's a 99.8% gas reduction."
+> "Two transactions. Open a channel. Close a channel. Everything in between — zero gas."
 
 ---
 
-## [1:30 - 2:30] MULTI-AGENT ECONOMY (60 seconds) - THE DIFFERENTIATOR
+## [0:35 - 1:50] LIVE AGENT DEMO (75 seconds)
 
-**[Switch to Browser Tab 2 - Economy Dashboard]**
+**Screen: Switch to Terminal 2 (fullscreen)**
 
-Say:
-> "But here's where it gets interesting. One agent paying for an API is nice. What about agents paying EACH OTHER?"
+**Say:**
 
-**[Economy dashboard is live - 3 agent cards, ACTIVE channels, arrows flowing]**
+> "Real agent. Real wallet. Real Stacks testnet."
 
-> "This is a live multi-agent economy running right now on Stacks testnet."
+**Action:** Run `npm run demo` and hit enter immediately.
 
-**[Point to each agent card]**
+Banner appears. Channel opening message appears.
 
-> "Three AI agents. Agent One — the Weather Oracle — publishes premium weather data behind an x402 paywall. Agent Two — the Trading Analyst — has a subscription channel open to Agent One. Every 30 seconds it pays for weather data, analyzes it, and produces a trading signal."
+**Say:**
 
-**[Point to the signal: BUY/SELL/HOLD]**
+> "Watch. It hits the API — 402. Reads the x402 v2 payment instructions — network, token, contract call. Opens a subscription channel on-chain. Transaction one."
 
-> "Agent Three — the Portfolio Manager — subscribes to Agent Two's signals. It consumes the signal, makes a portfolio allocation decision."
+Requests start streaming (green 200s).
 
-**[Point to portfolio: BTC:70% ETH:20% STX:8% CASH:2%]**
+**Say:**
 
-> "Three agents. Two subscription channels. Real STX flowing. Real on-chain verification. And look at the stats..."
+> "Now it's consuming data. Request after request. But here's the key — every single one is verified through a read-only call to our Clarity contract. Not a write. Not a transaction. A math check."
 
-**[Point to bottom stats bar]**
+*Let requests stream for 3-4 seconds in silence.*
 
-> "X total requests between these agents. Only 2 on-chain transactions. Everything else is verified through free read-only calls."
+> "The balance isn't stored and decremented — it's calculated live. Deposit minus elapsed blocks times rate. Pure math. Zero gas."
 
-> "This is what AI agent infrastructure looks like on Bitcoin."
+**[SPEED UP RECORDING HERE 3x while requests stream]** — Don't speed up your voice, just speed up the video during the request loop so the counter climbs fast.
 
----
+**[SLOW BACK TO NORMAL when balance gets low]**
 
-## [2:30 - 3:30] HOW IT WORKS - SMART CONTRACT (60 seconds)
+**Say:**
 
-**[Switch to Browser Tab 3 - Stacks Explorer]**
+> "Watch the balance..."
 
-Say:
-> "Let me show you this is real. Here's the deployed contract on Stacks testnet."
+402 hits. Red banner appears.
 
-**[Show the contract on explorer - verified, deployed]**
+**Say:**
 
-> "The entire magic is in one read-only function."
+> "Balance depleted. 402. Automatic revocation. The agent closes the channel — transaction two."
 
-**[Switch to VS Code or just say it]**
+*Pause 1 beat.*
 
-> "verify-payment. It takes a subscriber and service address, looks up the channel, and calculates: remaining equals deposit minus elapsed blocks times rate-per-block. If remaining is greater than zero, access granted. No writes. No gas. Just math."
-
-> "The contract has three functions that cost gas: open-channel, close-channel, and force-close. Everything else — every verification, every API call — is a free read-only call."
-
-**[Switch to VS Code - show middleware file briefly]**
-
-> "And for developers — protecting your API takes three lines. Import our middleware, add it to your Express route, done. Your API now accepts Bitcoin subscriptions."
+> "That was **73 requests**. Two on-chain transactions. 99.8% gas reduction. Not theoretical — you just watched it happen."
 
 ---
 
-## [3:30 - 4:15] THE DASHBOARD (45 seconds)
+## [1:50 - 3:00] MULTI-AGENT ECONOMY (70 seconds)
 
-**[Switch to Browser Tab 1 - Landing Page]**
+**Screen: Switch to Browser Tab 2 (economy dashboard already loaded)**
 
-Say:
-> "We built a full dashboard at bitsubs.vercel.app."
+**Say:**
 
-**[Scroll through the landing page quickly]**
+> "One agent subscribing to an API is a demo. This is an economy."
 
-> "The x402 protocol flow visualized. The comparison — traditional x402 versus BitSubs."
+Dashboard shows 3 agents, ACTIVE channels, arrows, data flowing.
 
-**[Click "Real Wallet Demo" button]**
+**Say:**
 
-> "And this is a real wallet integration. Connect your Hiro or Leather wallet, and you can open a subscription channel, make verified requests, and close the channel — all from the browser. Real transactions, real contract calls."
+> "Three AI agents. Running right now. On Stacks testnet. Paying each other for data through BitSubs subscription channels."
 
-**[Click /economy in nav]**
+**Action:** Hover mouse over Weather Oracle card.
 
-> "And the economy page — what you just saw — is polling our live API every 5 seconds. Real agents, real channels, real Bitcoin-secured infrastructure."
+**Say:**
+
+> "Agent One — Weather Oracle. Publishes premium weather and market data behind an x402 paywall."
+
+**Action:** Hover over Trading Analyst card.
+
+**Say:**
+
+> "Agent Two — Trading Analyst. Has a subscription channel open to the Oracle. Every 30 seconds, it pays for weather data, runs analysis, and produces a trading signal."
+
+**Action:** Point to the signal display (BUY @ 67% or whatever it shows).
+
+**Say:**
+
+> "Agent Three — Portfolio Manager. Subscribes to the Analyst's signal feed. Consumes it, makes allocation decisions."
+
+**Action:** Point to portfolio percentages (BTC:55% ETH:25% STX:12% CASH:8%).
+
+**Say:**
+
+> "Three agents. A supply chain of data. Real STX flowing between them."
+
+**Action:** Scroll down to stats bar at bottom.
+
+**Say:**
+
+> "Look at the numbers. **28 total requests** between these agents. **Two on-chain transactions**. Everything else — free read-only verification."
+
+*Pause 1 beat.*
+
+> "This is what agent infrastructure on Bitcoin looks like when it actually scales."
 
 ---
 
-## [4:15 - 5:00] THE CLOSE (45 seconds)
+## [3:00 - 3:45] WALLET CONNECT DEMO (45 seconds)
 
-**[Stay on economy dashboard or switch back to terminal]**
+**Screen: Switch to Browser Tab 3 (landing page)**
 
-Say:
-> "Let me put this in perspective."
+**Say:**
 
-> "Every other x402 implementation at this hackathon does pay-per-request. One API call, one transaction. That works for a demo. It does NOT work for production."
+> "Agents can do this autonomously. Humans can too."
 
-> "BitSubs solves this with subscription channels. Open once, stream forever, settle on-chain. Two transactions for unlimited access. 99.8% gas reduction."
+**Action:** Scroll down to "Real Wallet Demo" section. Click the button.
 
-> "We're not just x402 compliant — we're the first x402 implementation that actually scales. And we proved it with a live multi-agent economy where AI agents are paying each other for services right now, on Stacks testnet, secured by Bitcoin."
+Wallet UI appears.
 
-> "BitSubs. Bitcoin subscriptions without gas."
+**Say:**
 
-**[End on economy dashboard with ACTIVE channels visible]**
+> "Connect any Stacks wallet — Leather, Xverse, Hiro. Open a subscription channel."
+
+**Action:** Click "Connect Wallet". Leather popup appears. Click approve.
+
+**Say:**
+
+> "Real transaction. Real contract call."
+
+**Action:** Make 2-3 test requests. Show the balance bar draining slightly.
+
+**Say:**
+
+> "Make requests. Watch the balance drain. When it hits zero — 402. No human decided that. The math decided it."
+
+*Pause 1 beat.*
+
+> "This is live right now at bitsubs.vercel.app. Any judge can try this after the video."
 
 ---
 
-## KEY NUMBERS TO MEMORIZE
+## [3:45 - 4:30] ARCHITECTURE (45 seconds)
 
-Drop these naturally throughout. Judges remember numbers:
+**Screen: Switch to Browser Tab 5 (README architecture diagram)**
 
-- **2 transactions** for unlimited requests
-- **99.8%** gas reduction
-- **0 gas** per verification (read-only)
-- **3 lines** to protect your API
-- **3 agents** paying each other live
-- **13/13** contract tests passing
+**Action:** Show the architecture ASCII diagram from README.
 
-## COMMON JUDGE QUESTIONS (prep answers)
+**Say:**
 
-**Q: How is this different from Lightning Network?**
-> Lightning is for Bitcoin L1. We're on Stacks L2 using Clarity smart contracts with mathematical balance verification. No routing, no liquidity, no channel management complexity. One contract function opens a subscription.
+> "Here's the entire system. Three layers."
 
-**Q: What happens if the service goes down?**
-> Force-close. The subscriber can call force-close-channel after a timeout (10 blocks on testnet, 7 days on mainnet) and recover their remaining deposit. It's trustless.
+**Action:** Highlight/point to the top (Subscriber).
 
-**Q: Why not just use a regular API key?**
-> No accounts. No signup. No credit cards. No chargebacks. An AI agent with a Stacks wallet can subscribe to any BitSubs-protected API without human intervention. That's the unlock for autonomous agent economies.
+**Say:**
 
-**Q: Is the sBTC support real?**
-> The contract has open-channel-sbtc ready. We're waiting for stable sBTC testnet availability. The x402 response already advertises both STX and sBTC as payment options.
+> "Client layer — humans connect wallets, AI agents use our SDK. Both send the same thing: an x-payment-proof header with a Stacks signature."
 
-**Q: How does the balance drain work?**
-> Pure math. remaining = deposit - (current_block - opened_at) * rate_per_block. No writes, no storage updates. The balance is calculated on every read call. That's why verification is free.
+**Action:** Point to the middle (arrows and verify-payment).
 
-## TONE
+**Say:**
 
-- Confident, not arrogant
-- Fast-paced but clear
-- Let the live demos speak — don't over-explain
-- When something works live, pause for ONE second to let it land
-- Never say "basically" or "essentially" — be direct
+> "Middleware layer. This is three lines of code. Import our middleware, apply it to your Express route, done. It intercepts every request, calls the Clarity contract — read-only — checks if the balance is above zero. If yes, access granted. If no, 402. Zero gas. Zero writes."
+
+**Action:** Point to the bottom (Clarity Contract).
+
+**Say:**
+
+> "Chain layer. One Clarity smart contract. Two functions that cost gas — open channel and close channel. One function that's free — verify payment. That free function is the entire verification engine."
+
+**Action:** Point to or verbally reference the formula in the README.
+
+**Say:**
+
+> "The formula. Remaining equals deposit minus elapsed blocks times rate. That's it. No database. No facilitator. No off-chain sequencer. The blockchain does math, and math is free."
+
+---
+
+## [4:30 - 5:00] ON-CHAIN PROOF (30 seconds)
+
+**Screen: Switch to Browser Tab 4 (Stacks Explorer)**
+
+**Say:**
+
+> "This is real. Deployed contract on Stacks testnet. Every channel open, every channel close — verifiable on the Hiro Explorer."
+
+**Action:** Click on the contract deployment transaction. Show the contract code deployed.
+
+**Say:**
+
+> "Built with x402-stacks v2. CAIP-2 network identifiers. Base64 payment headers. Official package for protocol compliance, custom subscription architecture for the channel innovation."
+
+---
+
+## [5:00 - 5:25] THE CODE (25 seconds)
+
+**Screen: Switch to VS Code - subscription-channel-v2.clar file**
+
+**Action:** Show the `verify-payment` function (line 60-82).
+
+**Say:**
+
+> "Five lines of Clarity. The entire verification engine."
+
+**Action:** Let it sit for 3 seconds. Then switch to VS Code - x402-subscription.ts file.
+
+**Action:** Show the middleware function (line 64-77).
+
+**Say:**
+
+> "And for developers — one import, one line of config. Your API now accepts Bitcoin subscriptions."
+
+---
+
+## [5:25 - 6:10] THE CLOSE (45 seconds)
+
+**Screen: Switch back to Browser - Economy Dashboard (Tab 2)**
+
+**Action:** Let the live economy dashboard fill the screen with ACTIVE channels visible.
+
+**Say (look at camera if recording yourself, or just speak clearly):**
+
+> "Let me be direct about what we built."
+
+*Pause 1 beat.*
+
+> "Every other x402 project here does pay-per-request. One API call, one blockchain transaction. That works for a demo. It does not work for production. It does not work for agents that need continuous access. It does not work for the economy that x402 is supposed to enable."
+
+*Pause 1 beat.*
+
+> "BitSubs solves this. Subscription channels on Bitcoin. Open once, access continuously, settle when done. The balance drains mathematically — no writes, no gas, no facilitator. Just a Clarity contract doing math."
+
+*Pause 1 beat.*
+
+> "We proved it works with a live multi-agent economy. Three AI agents paying each other for data, right now, on Stacks testnet. **28 requests. Two transactions**. Secured by Bitcoin."
+
+*Pause 1 beat.*
+
+> "We're not just x402 compliant. We're the first x402 implementation that actually scales."
+
+---
+
+## [6:10 - 6:30] END CARD (20 seconds)
+
+**Screen: Stay on economy dashboard for 3 seconds, then switch to landing page (Tab 1)**
+
+**Action:** Show bitsubs.vercel.app landing page briefly (2 seconds).
+
+**Action:** Switch back to economy dashboard with live ACTIVE channels and flowing data.
+
+**Say:**
+
+> "BitSubs. Live at bitsubs.vercel.app. Try it yourself."
+
+*Pause 2 beats.*
+
+> "Bitcoin subscriptions. Without the gas."
+
+**Action:** Hold on the economy dashboard for 3 full seconds. Let the ACTIVE channels and green stats be the last thing judges see.
+
+**Fade to black.**
+
+---
+
+## 🎯 KEY NUMBERS TO MEMORIZE
+
+Replace these in the script with ACTUAL numbers from a practice run:
+
+- **Line 112**: "That was **73** requests" ← Run `npm run demo`, count the requests
+- **Line 142**: "**28 total requests**" ← Check `/api/stats` on the economy
+- **Line 210**: "**28 requests. Two transactions**" ← Same number
+
+## 🎬 RECORDING TIPS
+
+### Before you start:
+1. Do a full practice run (don't record). Time it. Adjust pacing.
+2. Clear your terminal history: `clear` in both terminals
+3. Restart the economy server to reset stats: `npm run server`
+4. Make sure both economy channels are ACTIVE (refresh the page)
+5. Close all notifications, turn on Do Not Disturb
+
+### During recording:
+- **Speak slowly and clearly** — you can always speed up the video, but you can't fix unclear audio
+- **Pause between major points** — judges need time to process
+- **Let visuals breathe** — when the agent demo is running, stay quiet for 3-4 seconds
+- **Use the mouse** — point to things on screen (channel cards, balance bars, stats)
+
+### After recording:
+1. Speed up the agent demo request loop section (1:10-1:35) to 3x
+2. Add subtle background music (optional, low volume)
+3. Add text overlays for key stats (optional):
+   - "2 transactions" when you say it
+   - "99.8% gas reduction" when you say it
+   - "bitsubs.vercel.app" at the end
+
+## 🔥 WHAT MAKES THIS SCRIPT WIN
+
+1. **Opens with silence** — dramatic, judges pay attention immediately
+2. **Live everything** — curl a real API, run a real agent, show a real economy
+3. **Builds up** — one agent → three agents → human wallet → code → on-chain proof
+4. **Direct language** — "Let me be direct" hits harder than "So in conclusion..."
+5. **Ends on the strongest visual** — live economy with ACTIVE channels, not a thank you slide
+
+## 🚨 COMMON MISTAKES TO AVOID
+
+- ❌ Don't say "um" or "basically" — cut it in editing if you do
+- ❌ Don't speed up your voice — only speed up the video during silent agent loops
+- ❌ Don't skip the pauses — they let points land
+- ❌ Don't read the script word-for-word on camera — internalize it, sound natural
+- ❌ Don't forget to fill in the actual numbers from your practice run
+
+---
+
+**You got this. Go record. Win first place.**
