@@ -33,7 +33,7 @@ Open these tabs IN THIS ORDER (left to right):
 2. **Tab 2**: https://bitsubs.vercel.app (click `/economy` BEFORE recording, let it load with ACTIVE channels)
 3. **Tab 3**: https://bitsubs.vercel.app (stay on landing, ready to click "Real Wallet Demo")
 4. **Tab 4**: https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet
-5. **Tab 5**: README.md architecture diagram (scroll to "Architecture" section)
+5. **Tab 5**: file:///Users/shashank/Downloads/bitsubs-architecture-v2.html (your architecture diagram - FULLSCREEN THIS)
 
 **Desktop 3 - VS Code:**
 
@@ -220,37 +220,43 @@ Wallet UI appears.
 
 ## [3:45 - 4:30] ARCHITECTURE (45 seconds)
 
-**Screen: Switch to Browser Tab 5 (README architecture diagram)**
+**Screen: Switch to Browser Tab 5 (architecture diagram HTML - FULLSCREEN)**
 
-**Action:** Show the architecture ASCII diagram from README.
-
-**Say:**
-
-> "Here's the entire system. Three layers."
-
-**Action:** Highlight/point to the top (Subscriber).
+**Action:** Show the architecture diagram fullscreen. Let it sit for 2 seconds.
 
 **Say:**
 
-> "Client layer — humans connect wallets, AI agents use our SDK. Both send the same thing: an x-payment-proof header with a Stacks signature."
+> "Here's the entire system."
 
-**Action:** Point to the middle (arrows and verify-payment).
-
-**Say:**
-
-> "Middleware layer. This is three lines of code. Import our middleware, apply it to your Express route, done. It intercepts every request, calls the Clarity contract — read-only — checks if the balance is above zero. If yes, access granted. If no, 402. Zero gas. Zero writes."
-
-**Action:** Point to the bottom (Clarity Contract).
+**Action:** Point to the top boxes (Human Client + AI Agent).
 
 **Say:**
 
-> "Chain layer. One Clarity smart contract. Two functions that cost gas — open channel and close channel. One function that's free — verify payment. That free function is the entire verification engine."
+> "Two types of clients. Humans connect wallets — Leather, Xverse, Hiro. AI agents use our SDK. Both send the same proof — an x-payment-proof header with a Stacks signature."
 
-**Action:** Point to or verbally reference the formula in the README.
+**Action:** Point to the middle orange box (x402 Subscription Middleware).
 
 **Say:**
 
-> "The formula. Remaining equals deposit minus elapsed blocks times rate. That's it. No database. No facilitator. No off-chain sequencer. The blockchain does math, and math is free."
+> "Middleware layer. Three lines of code. Import our middleware, apply it to your Express route, done. It intercepts every request, calls the Clarity contract read-only, checks the balance. Zero gas. Zero writes."
+
+**Action:** Point to the bottom left (Clarity Smart Contract box).
+
+**Say:**
+
+> "Chain layer. One smart contract. Two functions cost gas — open-channel, transaction one. Close-channel, transaction two. One function is free — verify-payment. That's the entire verification engine."
+
+**Action:** Point to the formula at the bottom of the screen.
+
+**Say:**
+
+> "The formula. Remaining equals deposit minus elapsed blocks times rate. No database. No off-chain state. The blockchain does math, and math is free."
+
+**Action:** Point to the stats bar at bottom (2, ∞, 99.8%, 0, 3 lines).
+
+**Say:**
+
+> "Two transactions. Infinite requests. 99.8% gas reduction. Zero writes per request. Three lines to integrate."
 
 ---
 
