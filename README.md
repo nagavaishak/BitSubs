@@ -135,42 +135,30 @@ This is the **first x402 implementation for continuous subscriptions** - combini
 
 ## Architecture
 
+![BitSubs Architecture](docs/architecture.png)
+
+**System Overview:**
+
+**Client Layer** — Humans connect wallets (Leather/Xverse/Hiro), AI agents use our SDK. Both send `x-payment-proof` headers with Stacks signatures.
+
+**Middleware Layer** — 3 lines of code to protect any API. Intercepts requests, calls Clarity contract (read-only), checks balance. 0 gas, 0 writes per request.
+
+**Chain Layer** — One Clarity smart contract on Stacks L2:
+- `open-channel` → TX #1 (costs gas)
+- `close-channel` → TX #2 (costs gas)
+- `verify-payment` → FREE (read-only verification)
+
+**Verification Formula:**
 ```
-┌─────────────┐                           ┌──────────────┐
-│  Subscriber │                           │   Service    │
-│             │                           │   Provider   │
-└──────┬──────┘                           └──────┬───────┘
-       │                                         │
-       │  1. Open Channel (STX deposit)         │
-       │────────────────────────────────────────>│
-       │                                         │
-       │  2. Request Access + Subscriber ID     │
-       │────────────────────────────────────────>│
-       │                                         │
-       │                    3. Verify Payment ──┤
-       │                       (READ-ONLY)       │
-       │                       ↓                 │
-       │              ┌──────────────────┐      │
-       │              │ Clarity Contract │      │
-       │              │  verify-payment  │      │
-       │              └──────────────────┘      │
-       │                       ↓                 │
-       │                 remaining > 0?          │
-       │                                         │
-       │  <───── 4. Access Granted/Denied ──────│
-       │                                         │
-       │  ... (1000 more requests) ...          │
-       │                                         │
-       │  5. Close Channel & Settle             │
-       │────────────────────────────────────────>│
-       │                                         │
+remaining = deposit - (current_block - opened_at) × rate_per_block
 ```
 
-**Read-Only Verification Model**:
-- No per-request write transactions
-- Balance calculated: `remaining = deposit - ((block-height - opened-at) × rate)`
-- Middleware queries contract state, never modifies it
-- TRUE "1000 payments = 2 on-chain transactions"
+**Key Metrics:**
+- 2 on-chain transactions
+- ∞ requests between open/close
+- 99.8% gas reduction
+- 0 writes per request
+- 3 lines to integrate
 
 ## Quick Start
 
