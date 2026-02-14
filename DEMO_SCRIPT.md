@@ -114,23 +114,25 @@ Requests start streaming (green 200s).
 
 > "The balance isn't stored and decremented — it's calculated live. Deposit minus elapsed blocks times rate. Pure math. Zero gas."
 
-**[SPEED UP RECORDING HERE 3x while requests stream]** — Don't speed up your voice, just speed up the video during the request loop so the counter climbs fast.
+**[SPEED UP RECORDING HERE 2-3x while requests stream]** — Don't speed up your voice, just speed up the video during the request loop (requests 5-25) so the counter climbs fast. Slow back to normal at request ~28.
 
-**[SLOW BACK TO NORMAL when balance gets low]**
+**[SLOW BACK TO NORMAL after 25-30 requests]**
 
-**Say:**
-
-> "Watch the balance..."
-
-402 hits. Red banner appears.
+Demo stops after 30 requests. Message appears: "Demo limit reached..."
 
 **Say:**
 
-> "Balance depleted. 402. Automatic revocation. The agent closes the channel — transaction two."
+> "That was **30 requests**. The balance drains per block — not per request. In production, this channel would last days. For this demo, we're closing early to show you the settlement."
 
 *Pause 1 beat.*
 
-> "That was **73 requests**. Two on-chain transactions. 99.8% gas reduction. Not theoretical — you just watched it happen."
+> "Watch. The agent closes the channel — transaction two."
+
+Agent closes channel. TX ID appears.
+
+*Pause 1 beat.*
+
+> "Two on-chain transactions. 30 requests. 93% gas reduction. Not theoretical — you just watched it happen."
 
 ---
 
@@ -350,9 +352,9 @@ Wallet UI appears.
 
 Replace these in the script with ACTUAL numbers from a practice run:
 
-- **Line 112**: "That was **73** requests" ← Run `npm run demo`, count the requests
-- **Line 142**: "**28 total requests**" ← Check `/api/stats` on the economy
-- **Line 210**: "**28 requests. Two transactions**" ← Same number
+- **Agent demo**: Will be exactly **30 requests** (hardcoded limit)
+- **Economy stats**: Check `/api/stats` live — will vary (currently showing ~28-50 total requests between agents)
+- **Gas reduction**: 30 requests with 2 txns = 93.3% reduction
 
 ## 🎬 RECORDING TIPS
 
