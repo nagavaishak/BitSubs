@@ -4,7 +4,7 @@
 
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen)]() [![Clarity](https://img.shields.io/badge/clarity-v2-blue)]() [![TypeScript](https://img.shields.io/badge/typescript-5.3-blue)]() [![License](https://img.shields.io/badge/license-MIT-blue)]() [![x402](https://img.shields.io/badge/x402-compliant-orange)](https://x402.org)
 
-**🌐 [Live Demo](https://bitsubs.vercel.app)** | **🚀 [Live API](https://bitsubs-production.up.railway.app/health)** | **📝 [Contract Explorer](https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet)**
+**🎥 [Demo Video](https://youtu.be/fX-Zn_zhVM4)** | **🌐 [Live Demo](https://bitsubs.vercel.app)** | **🚀 [Live API](https://bitsubs-production.up.railway.app/health)** | **📝 [Contract Explorer](https://explorer.hiro.so/txid/49ad441c47246c6e95ce332fce14bab0fc5927da2113410b58478aae0fa187ac?chain=testnet)**
 
 ## What This Is
 
@@ -159,6 +159,45 @@ remaining = deposit - (current_block - opened_at) × rate_per_block
 - 99.8% gas reduction
 - 0 writes per request
 - 3 lines to integrate
+
+### Payment Flow
+
+```
+┌─────────────┐                           ┌──────────────┐
+│  Subscriber │                           │   Service    │
+│             │                           │   Provider   │
+└──────┬──────┘                           └──────┬───────┘
+       │                                         │
+       │  1. Open Channel (STX deposit)         │
+       │────────────────────────────────────────>│
+       │                                         │
+       │  2. Request Access + Subscriber ID     │
+       │────────────────────────────────────────>│
+       │                                         │
+       │                    3. Verify Payment ──┤
+       │                       (READ-ONLY)       │
+       │                       ↓                 │
+       │              ┌──────────────────┐      │
+       │              │ Clarity Contract │      │
+       │              │  verify-payment  │      │
+       │              └──────────────────┘      │
+       │                       ↓                 │
+       │                 remaining > 0?          │
+       │                                         │
+       │  <───── 4. Access Granted/Denied ──────│
+       │                                         │
+       │  ... (1000 more requests) ...          │
+       │                                         │
+       │  5. Close Channel & Settle             │
+       │────────────────────────────────────────>│
+       │                                         │
+```
+
+**Read-Only Verification Model**:
+- No per-request write transactions
+- Balance calculated: `remaining = deposit - ((block-height - opened-at) × rate)`
+- Middleware queries contract state, never modifies it
+- TRUE "1000 payments = 2 on-chain transactions"
 
 ## Quick Start
 
@@ -511,6 +550,7 @@ Inspired by:
 
 ## Links
 
+- **Demo Video**: https://youtu.be/fX-Zn_zhVM4
 - **Live Dashboard**: https://bitsubs.vercel.app
 - **Live API**: https://bitsubs-production.up.railway.app
 - **GitHub**: https://github.com/nagavaishak/BitSubs
