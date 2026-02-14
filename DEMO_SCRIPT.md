@@ -39,7 +39,7 @@ Open these tabs IN THIS ORDER (left to right):
 
 Open these files in tabs:
 1. `src/middleware/x402-subscription.ts` (scroll to line 64 - the middleware function)
-2. `bitsubs/contracts/subscription-channel-v2.clar` (scroll to line 60 - verify-payment function)
+2. `bitsubs/contracts/subscription-channel.clar` (scroll to line 60 - verify-payment function)
 
 **Pre-flight checklist:**
 - [ ] Economy page shows ACTIVE channels (both Agent 2 and Agent 3)
@@ -278,7 +278,7 @@ Wallet UI appears.
 
 ## [5:00 - 5:25] THE CODE (25 seconds)
 
-**Screen: Switch to VS Code - subscription-channel-v2.clar file**
+**Screen: Switch to VS Code - subscription-channel.clar file**
 
 **Action:** Show the `verify-payment` function (line 60-82).
 
