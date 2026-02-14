@@ -290,8 +290,9 @@ async function runAgentDemo() {
   const deposit = channelStatus.deposit || 1000000;
   let lastKnownBalance = channelStatus.remaining;
   const BALANCE_CHECK_INTERVAL = 10; // check balance every N requests
+  const MAX_REQUESTS_FOR_DEMO = 30; // limit for demo video (balance won't deplete in 30s)
 
-  while (!hitPaywall) {
+  while (!hitPaywall && totalRequests < MAX_REQUESTS_FOR_DEMO) {
     const ep = endpoints[totalRequests % endpoints.length];
     totalRequests++;
 
@@ -345,6 +346,14 @@ async function runAgentDemo() {
       logError(`Request #${totalRequests} → HTTP ${result.status}`);
       await sleep(1000);
     }
+  }
+
+  // If we hit max requests without 402, explain for demo purposes
+  if (!hitPaywall && totalRequests >= MAX_REQUESTS_FOR_DEMO) {
+    console.log('');
+    log('💡', `${C.dim}Demo limit reached (${MAX_REQUESTS_FOR_DEMO} requests). In production, this continues until balance depletes.${C.reset}`);
+    log('📊', `Current balance: ${C.green}${microSTXtoSTX(BigInt(lastKnownBalance))} STX${C.reset} ${C.dim}(still active)${C.reset}`);
+    log('⏱️', `${C.dim}Balance drains per block, not per request — would last ~${Math.floor((lastKnownBalance / 100) / 30)} days at current rate.${C.reset}`);
   }
 
   await sleep(800);
