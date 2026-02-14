@@ -43,3 +43,7 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+
+# Deployment scripts (local use only)
+deploy-testnet.js
+derive-key.js
